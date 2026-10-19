@@ -2,7 +2,7 @@
 
 **Every route should be accessible.**
 
-Cloud handoff: a protected Vercel preview is READY; GitHub publication and full remote database configuration remain pending. See [current launch status](docs/LAUNCH_STATUS.md).
+Live app: https://accesspath-alpha.vercel.app · Source: https://github.com/Noooba/accesspath. Hosted Turso persistence and live walking routing were verified. See [current launch status](docs/LAUNCH_STATUS.md).
 
 AccessPath compares pedestrian routes using documented pathway attributes, including stairs, slopes, surfaces, curbs, and closures. It explains route choices and missing information instead of treating an unknown path as confirmed step-free.
 
@@ -85,7 +85,7 @@ The pure route engine validates a site graph, filters edges, runs Dijkstra with 
 
 No map tile service, geocoding key, live AI service, or paid account is needed for the **schematic demo** at `/explore`. The separate `/routes` page does make disclosed external requests for street tiles and user-submitted searches/routes. Its Google Maps button opens Google walking directions for the selected endpoints; it does not embed Google's map or use a Google routing API, and needs no Google API key. Google calculates its own route.
 
-Serverless deployment cannot use local writable SQLite as durable report storage or as a shared live-provider request gate: configure a supported remote database, or reporting and uncached live API requests clearly fail as unavailable. The schematic demo remains readable. No public deployment or persistent cloud database is established by this README.
+Serverless deployment cannot use local writable SQLite as durable report storage or as a shared live-provider request gate: configure a supported remote database, or reporting and uncached live API requests clearly fail as unavailable. The schematic demo remains readable. The current deployed release and its hosted checks are recorded in docs/LAUNCH_STATUS.md.
 
 ## Accessibility, privacy, and limitations
 
@@ -103,6 +103,6 @@ A public-data functional check on October 18, 2026 returned a 315.2 m walking ro
 - [3–4 minute video recording plan](docs/DEMO_SCRIPT.md)
 - [Development progress](docs/PROGRESS.md)
 
-The student still needs genuine local evidence, meaningful review/testing contributions, a public repository, and a recorded working video before claiming submission readiness. Future work should begin with one permitted, maintained campus pilot and assistive-technology testing, then expand coverage based on reviewed evidence.
+The student still needs genuine local evidence, meaningful review/testing contributions, a recorded working video before claiming submission readiness. Future work should begin with one permitted, maintained campus pilot and assistive-technology testing, then expand coverage based on reviewed evidence.
 
 OpenAI Codex assisted development and documentation, with UI/UX Designer and UI UX Pro Max guidance. The 21st local design-context workflow was used; catalog search/usage required sign-in, so no catalog component or hosted generation is claimed. The final submission must disclose the student's own contributions; use the editable disclosure in the Devpost draft. No submission or publication is performed by these documents.
