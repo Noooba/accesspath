@@ -1,0 +1,37 @@
+# AccessPath prototype privacy notes
+
+AccessPath is an accessibility-route demonstration, not an emergency-navigation service. The bundled campus, access conditions, and scenario closures are synthetic. The empty pilot area contains no verified school or community survey data. The separate `/routes` page offers public-map walking directions; these do not become verified accessible routes or evidence of a campus survey.
+
+## What the application stores
+
+The server database stores site/path geometry, provenance labels, obstacle-report text and category, report timestamps, moderation state, optional moderator notes, duplicate-report hashes, and short-lived aggregate rate-limit counters. Reports are public to anyone who can access the site. The application does not ask for a reporter's name, email address, disability, account, photographs, or precise live location. Do not put names, contact details, health information, student information, or identifying narratives into a report. Text is not automatically anonymized; avoid submitting identifying content in the first place.
+
+The report API omits internal duplicate hashes and moderator notes from public responses. Administrator responses include moderator notes and require server authorization. A duplicate hash is derived from the site, path, category, and normalized description, not from a visitor identity. Rate-limit buckets are deployment-wide and contain no IP address or device identifier. Standard hosting, reverse-proxy, and network logs may still process request metadata under the operator's own policies; AccessPath cannot promise those systems never log anything.
+
+## Browser and administrator sessions
+
+The administrator session is a signed, one-hour, HttpOnly cookie with SameSite=Strict and a Secure flag in production. Signing protects integrity; it does not encrypt content. The payload contains a moderator role and token timing/audience metadata, not the administrator key. Public route requests and reports require no login. The application does not use advertising or third-party analytics SDKs.
+
+The synthetic campus at `/explore` uses an original schematic and makes no external map-tile requests. The separate `/routes` page makes the external requests described below. Application code must not silently add geolocation collection, personal-data analytics, or persistent tracking. The app does not request device GPS/location permission; its initial street-map viewport is a fixed public Torrance area, not a detected visitor location.
+
+## Real-world routes and external providers
+
+Place search is manual. Text is sent only when you submit search, rather than on each keystroke. The application's same-origin server sends that query to [Photon's public geocoder](https://github.com/komoot/photon#demo-server). Calculating a route sends your deliberately selected start/end coordinates through the application's server to [FOSSGIS's OSRM walking router](https://routing.openstreetmap.de/about.html). These upstream servers receive the query or coordinates, the application's request identity, and the application's server network metadata; the proxy does not deliberately attach your visitor IP as a forwarded identity. This does not mean the overall service is anonymous: the application host, network operators, and providers can process request metadata under their own policies. FOSSGIS explicitly states that route requests are saved in its server log.
+
+Street tiles load directly from OpenStreetMap's tile service when you view `/routes`. That service can receive your browser IP, user-agent, referring origin, requested tile coordinates/zoom, and associated network metadata. Tile coordinates reveal the viewed area even without a GPS request. Normal browser HTTP tile caching is retained; no bulk/offline map download is provided. See the [OSMF tile policy and its privacy links](https://operations.osmfoundation.org/policies/tiles/#6-privacy). Written directions and coordinate entry remain available if tile loading fails; an external-service failure is not concealed by a fabricated route.
+
+The **Open in Google Maps** link sends the selected endpoint coordinates in a Google walking-directions URL when you choose to open it. Google then handles the navigation request according to its own policies and calculates its own route. AccessPath does not embed Google's map, send a Google routing API request, or need a Google API key. Provider terms, cookies, logs, accounts, and retention outside this application are not controlled by AccessPath.
+
+Search text, selected coordinates, and route results stay in the planner's browser memory and in bounded temporary server-memory caches; the application does not save them as a SQL route/search history. Search results can be reused for 10 minutes (at most 100 entries / 512 KiB per process); route results for 5 minutes (at most 12 entries / 6 MiB). After TTL expiry they are no longer reused, but expired entries are removed on access, subsequent insertion/eviction, or process termination, not by a timed erasure job. The shared SQL provider gate stores provider-level bucket/counter information without queries, coordinates, IP addresses, or device identifiers. Ordinary hosting/network logs and external-provider retention remain separate.
+
+Avoid submitting private addresses, confidential locations, or identifying information to these public services. You can use the synthetic demo without real-world place search. A successful public-map route calculation establishes only that the integration returned mapped walking directions; it does not verify accessibility or collect field observations. See [live-routing operation and limitations](LIVE_ROUTING.md).
+
+## Storage, retention, and deletion
+
+Local development retains data in `data/accesspath.db` until the local operator removes it. A deployed environment requires an explicitly configured remote libSQL database for durable reports. Without one, report submission fails clearly rather than saving to an ephemeral filesystem. Data is not transmitted to an AI service by this application.
+
+There is no automatic report-retention job or public deletion/self-service flow in this prototype. Operators must define a suitable retention period and contact channel before accepting real reports. An operator can locate and delete a report by its returned report ID through trusted database access. Deleting the row also removes its duplicate hash. Review logs, backups, and provider retention separately: deleting a row may not immediately erase provider backups or external logs. Do not claim a deletion SLA that has not been implemented and tested.
+
+## Operator responsibilities before a real pilot
+
+Publish actual operator identity, a support/deletion contact, hosting/database provider details, retention rules, and a field-data review process before inviting real submissions. Review school/minor safeguarding needs, accessibility, permissions for publishing location information, and applicable local privacy requirements. These are implementation notes, not a legal compliance certification or legal advice.

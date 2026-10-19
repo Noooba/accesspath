@@ -1,0 +1,21 @@
+{
+  "projectId": "prj_ZB1yTdpIoMwGIyS9kboPWH61mWWA",
+  "deploymentId": "dpl_6vgekzPAvv7DFStUESWx8niTWRX3",
+  "url": "https://accesspath-f9gl8hh2i-nas-projects-02932294.vercel.app",
+  "target": "staging",
+  "state": "READY",
+  "commit": "999ab356ce943a11a6f31a246ca01922f3495ee2",
+  "githubPublished": false,
+  "remoteDatabaseConfigured": false,
+  "protection": "Vercel Authentication; sign-in page observed",
+  "limitedPreviewChecks": "passed locally with VERCEL=1; hosted application behind sign-in",
+  "protectedFetch": "403: connected Vercel account not authorized to protected project/team",
+  "publicationRegression": {
+    "vitest": 107,
+    "browserTests": 33,
+    "limitedPreviewChecks": 6,
+    "build": "passed",
+    "lint": "passed",
+    "typecheck": "passed"
+  }
+}

@@ -1,0 +1,177 @@
+{
+  "version": 1,
+  "project": {
+    "name": "accesspath",
+    "productType": "Campus-scale accessibility-aware route planner",
+    "stack": [
+      "nextjs",
+      "react",
+      "tailwind-v4"
+    ]
+  },
+  "sources": {
+    "tokens": [
+      "src/app/globals.css",
+      "src/app/layout.tsx"
+    ],
+    "components": [
+      "src/components/layout/SiteHeader.tsx",
+      "src/components/map/CampusPreview.tsx",
+      "src/components/map/CampusMap.tsx",
+      "src/components/routing/Explorer.tsx",
+      "src/components/routing/RouteDetails.tsx",
+      "src/components/reports/ReportForm.tsx",
+      "src/components/community/EvidenceDashboard.tsx",
+      "src/components/routing/RealWorldPlanner.tsx",
+      "src/components/routing/PlacePicker.tsx",
+      "src/components/map/RealWorldMap.tsx"
+    ],
+    "assets": [
+      "public/fonts/manrope.ttf",
+      "public/fonts/inter.ttf",
+      "public/fonts/Manrope-OFL.txt",
+      "public/fonts/Inter-OFL.txt"
+    ],
+    "instructions": [
+      "User AccessPath brief (2026-10-16)",
+      "docs/DATA_VERIFICATION.md",
+      "docs/ACCESSIBILITY.md"
+    ]
+  },
+  "design": {
+    "colorMode": "light",
+    "colors": {
+      "ink": "#0C1424",
+      "canvas": "#F6F8FB",
+      "primaryTeal": "#087F78",
+      "tealDark": "#06645E",
+      "tealLight": "#D9F5F0",
+      "mutedText": "#526174",
+      "border": "#DCE3E9",
+      "caution": "#A14E09",
+      "danger": "#B42332",
+      "white": "#FFFFFF",
+      "mapShortest": "#416EAF",
+      "mapUnknown": "#B65E11"
+    },
+    "typography": {
+      "headings": {
+        "family": "Manrope",
+        "source": "public/fonts/manrope.ttf",
+        "fallback": "Arial, sans-serif"
+      },
+      "body": {
+        "family": "Inter",
+        "source": "public/fonts/inter.ttf",
+        "fallback": "Arial, sans-serif"
+      },
+      "numerals": "tabular-nums on distance and count readouts",
+      "readabilityReview": "Operational labels increased to 12px and microcopy to at least 11px during root review; actual browser readability and target checks remain separate."
+    },
+    "spacing": {
+      "system": "8-point rhythm with compact interface adjustments",
+      "desktopPageGutter": "52px",
+      "pageMaxWidth": "1240px"
+    },
+    "radius": {
+      "button": "7px",
+      "statusBadge": "5px",
+      "featureMap": "12px"
+    },
+    "shadows": {
+      "featureMap": "0 16px 40px #15312e0a",
+      "primaryButton": "0 3px 5px #0c142409"
+    },
+    "motion": {
+      "buttonTransition": "160ms",
+      "pressFeedback": "translateY(1px)",
+      "reducedMotion": "prefers-reduced-motion disables nonessential transitions and loops",
+      "libraryStatus": "RouteDetails uses a Motion React wrapper and useReducedMotion for result state; browser behavior remains to be verified, with no broad page-animation claim."
+    },
+    "density": "compact"
+  },
+  "components": {
+    "installed": [
+      "Original SiteHeader and SiteFooter",
+      "Original synthetic CampusPreview SVG",
+      "Original Leaflet CRS.Simple CampusMap",
+      "Route planner and RouteDetails",
+      "ReportForm and AdminReview",
+      "StatusBadge",
+      "EvidenceDashboard"
+    ],
+    "preferredPrimitives": [
+      "native HTML controls",
+      "Radix UI when needed"
+    ],
+    "patterns": [
+      "Labeled route form and text itinerary as map alternatives",
+      "Actual graph-derived map paths and comparisons",
+      "Explicit demo, unknown, pending and unavailable states",
+      "Server-validated reporting and authenticated review"
+    ]
+  },
+  "constraints": {
+    "must": [
+      "Keep all campus fixtures explicitly synthetic",
+      "Never equate demo documentation coverage with a real survey",
+      "Use calculated graph routes, not decorative fake results",
+      "Provide non-map and keyboard alternatives",
+      "Respect reduced motion and visible focus",
+      "Use actual storage/report states and preserve unknown values"
+    ],
+    "avoid": [
+      "Generic AI startup sections",
+      "Decorative gradient blobs and glass surfaces",
+      "Invented interviews, impact metrics or verified campus claims",
+      "Color-only status communication",
+      "Unnecessary geolocation or external map tile requests"
+    ]
+  },
+  "decisions": [
+    "2026-10-16: Use the requested calm civic mapping direction: white/light canvas, ink typography, teal primary actions, blue ordinary routes, amber uncertainty and red closures.",
+    "2026-10-16: Use locally hosted Manrope headings and Inter interface text with included OFL licenses.",
+    "2026-10-16: Build an original synthetic schematic and custom project components; no real-campus basemap or external tile service.",
+    "2026-10-16: 21st init --design-context succeeded. Catalog search and usage returned not-signed-in; no 21st component was retrieved and no hosted generation was called.",
+    "2026-10-16: UI/UX Designer and UI UX Pro Max guidance inform the implementation; do not insert affiliate advertising into the product.",
+    "2026-10-17: Reconciled source design context, scope of Motion usage, and accessible-target review; final browser QA remains the evidence for visual behavior.",
+    "2026-10-17: Local 21st review completed: zero errors/warnings; 306 informational hardcoded-color suggestions. Added 44px map controls, AA contrast fixes, keyboard skip focus, Radix navigation, a nonmodal mobile/tablet planning sheet, and restrained result transitions. Browser verification is recorded separately in docs/TEST_REPORT.md.",
+    "2026-10-17: Final software verification passed81 Vitest tests,22 browser tests, lint, TypeScript, production build and local migrate/seed; affected mobile capture check also passed after screenshot refinement.",
+    "2026-10-18: Added separate real-world walking planner using existing typography/teal tokens, OSM street tiles, Photon manual place search and actual foot-profile OSRM routing. Keep ordinary walking results explicitly unverified; Google Maps handoff is an external URL, not an embedded Google route. No new UI framework/dependency."
+  ],
+  "evidence": [
+    {
+      "fact": "Next.js and React dependencies",
+      "source": "package.json"
+    },
+    {
+      "fact": "Tailwind 4 import and custom brand variables",
+      "source": "src/app/globals.css"
+    },
+    {
+      "fact": "Local Manrope and Inter fonts",
+      "source": "src/app/layout.tsx"
+    },
+    {
+      "fact": "Original schematic on CRS.Simple without external tiles",
+      "source": "src/components/map/CampusMap.tsx"
+    },
+    {
+      "fact": "21st registry configured; no catalog component installed",
+      "source": "components.json and authenticated catalog unavailable result"
+    },
+    {
+      "fact": "Final81 Vitest tests and22 production browser tests passed; desktop/tablet/mobile screenshots inspected. No complete WCAG or real-campus validation is claimed.",
+      "source": "docs/TEST_REPORT.md"
+    },
+    {
+      "fact": "Public-data integration returned315.2m/10steps for Torrance City Hall→KatyGeissertLibrary and rendered in browser; Google walking handoff also opened. This is functional verification, not an accessibility survey.",
+      "source": "docs/LIVE_ROUTING.md"
+    },
+    {
+      "fact": "Final real-world extension:107 Vitest tests and33 frozen-build browser tests passed; lint/types/build passed;372 informational21streview suggestions.",
+      "source": "docs/TEST_REPORT.md"
+    }
+  ],
+  "generatedAt": "2026-10-17T01:00:11.405Z"
+}

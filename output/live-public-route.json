@@ -1,0 +1,167 @@
+{
+  "provider": "FOSSGIS OSRM",
+  "profile": "walking",
+  "dataSource": "OpenStreetMap",
+  "routes": [
+    {
+      "id": "walking-1",
+      "distanceMeters": 315.2,
+      "durationSeconds": 252.3,
+      "coordinates": [
+        [
+          33.836867,
+          -118.340942
+        ],
+        [
+          33.836944,
+          -118.341233
+        ],
+        [
+          33.836904,
+          -118.341249
+        ],
+        [
+          33.836993,
+          -118.341582
+        ],
+        [
+          33.837025,
+          -118.341569
+        ],
+        [
+          33.837221,
+          -118.342248
+        ],
+        [
+          33.837232,
+          -118.342291
+        ],
+        [
+          33.837664,
+          -118.342128
+        ],
+        [
+          33.83787,
+          -118.342935
+        ],
+        [
+          33.837951,
+          -118.342917
+        ],
+        [
+          33.837961,
+          -118.342949
+        ],
+        [
+          33.837965,
+          -118.342966
+        ],
+        [
+          33.837816,
+          -118.343019
+        ],
+        [
+          33.837678,
+          -118.343068
+        ]
+      ],
+      "steps": [
+        {
+          "instruction": "Start along the mapped walking route",
+          "distanceMeters": 28.3,
+          "location": [
+            33.836867,
+            -118.340942
+          ]
+        },
+        {
+          "instruction": "Turn left",
+          "distanceMeters": 4.7,
+          "location": [
+            33.836944,
+            -118.341233
+          ]
+        },
+        {
+          "instruction": "Turn right",
+          "distanceMeters": 32.4,
+          "location": [
+            33.836904,
+            -118.341249
+          ]
+        },
+        {
+          "instruction": "Turn right",
+          "distanceMeters": 3.7,
+          "location": [
+            33.836993,
+            -118.341582
+          ]
+        },
+        {
+          "instruction": "Turn left",
+          "distanceMeters": 70.7,
+          "location": [
+            33.837025,
+            -118.341569
+          ]
+        },
+        {
+          "instruction": "Turn right",
+          "distanceMeters": 50.2,
+          "location": [
+            33.837232,
+            -118.342291
+          ]
+        },
+        {
+          "instruction": "Turn left",
+          "distanceMeters": 87.3,
+          "location": [
+            33.837664,
+            -118.342128
+          ]
+        },
+        {
+          "instruction": "Turn left",
+          "distanceMeters": 4.8,
+          "location": [
+            33.837951,
+            -118.342917
+          ]
+        },
+        {
+          "instruction": "Turn left",
+          "distanceMeters": 33.2,
+          "location": [
+            33.837965,
+            -118.342966
+          ]
+        },
+        {
+          "instruction": "Arrive at the mapped destination",
+          "distanceMeters": 0,
+          "location": [
+            33.837678,
+            -118.343068
+          ]
+        }
+      ],
+      "snappedStart": {
+        "lat": 33.836867,
+        "lon": -118.340942
+      },
+      "snappedEnd": {
+        "lat": 33.837678,
+        "lon": -118.343068
+      },
+      "startSnapDistanceMeters": 10.8123743,
+      "endSnapDistanceMeters": 21.79296889,
+      "warnings": [
+        "Mapped walking route only. Step-free access, slopes, surface quality, width, and temporary obstructions have not been verified.",
+        "Travel time is a provider estimate; this is not accessible-route certification or emergency navigation."
+      ]
+    }
+  ],
+  "fetchedAt": "2026-10-18T19:06:30.057Z"
+}
