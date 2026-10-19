@@ -31,6 +31,8 @@ import { DEFAULT_FILTERS } from "@/lib/routing";
 import { apiJson } from "@/lib/http-client";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { RouteDetails, MODE_LABELS } from "./RouteDetails";
+import { SaveRouteForm, useSavedRoutes } from './SavedRoutes';
+import type { SavedJourney } from '@/lib/saved-routes';
 const CampusMap = dynamic(() => import("@/components/map/CampusMap"), {
   ssr: false,
   loading: () => (
@@ -48,16 +50,23 @@ type CalculationResponse = {
   storageUnavailable?: boolean;
 };
 const EMPTY_RESULTS: Partial<Record<RouteMode, RouteResult>> = {};
-export function Explorer() {
+export function Explorer({ savedId, initialMode = 'confirmed' }: { savedId?: string; initialMode?: RouteMode }) {
+  const library = useSavedRoutes();
+  const saved = library.routes.find(item => item.id === savedId);
+  if (savedId && !library.loaded) return <main id="main-content" className="page-width saved-page"><p role="status">Opening saved campus route…</p></main>;
+  if (savedId && (!saved || saved.journey.kind !== 'campus')) return <main id="main-content" className="page-width saved-page"><h1>Saved campus route unavailable.</h1><p>{library.error || 'This route is not saved in this browser.'}</p><Link href="/saved" className="button secondary">Open route library</Link></main>;
+  return <CampusExplorer key={savedId ?? 'new'} initial={saved?.journey.kind === 'campus' ? saved.journey : undefined} initialMode={initialMode} />;
+}
+function CampusExplorer({ initial, initialMode }: { initial?: Extract<SavedJourney, {kind:'campus'}>; initialMode: RouteMode }) {
   const [sites, setSites] = useState<Site[]>(SITES),
     [siteListError, setSiteListError] = useState(""),
-    [siteId, setSiteId] = useState("demo-campus"),
+    [siteId, setSiteId] = useState(initial?.siteId ?? "demo-campus"),
     [graphResponse, setGraphResponse] = useState<GraphResponse | null>(null),
-    [startId, setStart] = useState("main-gate"),
-    [endId, setEnd] = useState("library"),
-    [mode, setMode] = useState<RouteMode>("confirmed"),
-    [scenario, setScenario] = useState<ScenarioId>("baseline"),
-    [filters, setFilters] = useState<RouteFilters>(DEFAULT_FILTERS),
+    [startId, setStart] = useState(initial?.startId ?? "main-gate"),
+    [endId, setEnd] = useState(initial?.endId ?? "library"),
+    [mode, setMode] = useState<RouteMode>(initial?.mode ?? initialMode),
+    [scenario, setScenario] = useState<ScenarioId>(initial?.scenario ?? "baseline"),
+    [filters, setFilters] = useState<RouteFilters>(initial?.filters ?? DEFAULT_FILTERS),
     [calculation, setCalculation] = useState<CalculationResponse | null>(null),
     [refresh, setRefresh] = useState(0),
     [selectedEdgeId, setSelectedEdge] = useState<string | null>(null),
@@ -246,6 +255,7 @@ export function Explorer() {
           Data methodology <ArrowUpRight size={13} />
         </Link>
       </div>
+      {initial && <p className="storage-notice">Saved campus settings restored. The route is recalculated using the current synthetic graph, scenario and filters.</p>}
       {siteListError && (
         <p role="status" className="storage-notice">
           {siteListError}
@@ -374,6 +384,7 @@ export function Explorer() {
                 ),
               )}
             </fieldset>
+            {graph && result?.status === 'found' && !loading && <SaveRouteForm key={JSON.stringify([calculationKey, mode])} defaultName={`${graph.nodes.find(node => node.id === startId)?.name ?? startId} to ${graph.nodes.find(node => node.id === endId)?.name ?? endId}`} journey={{kind:'campus', siteId, startId, endId, startLabel:graph.nodes.find(node => node.id === startId)?.name ?? startId, endLabel:graph.nodes.find(node => node.id === endId)?.name ?? endId, distanceMeters:result.distanceMeters, mode, scenario, filters}} />}
             <details className="filter-details">
               <summary>
                 <SlidersHorizontal size={15} /> Additional preferences{" "}

@@ -16,6 +16,8 @@ This independent prototype ships with **AccessPath Demo Campus**. All campus geo
 - Labeled closure/uncertainty scenarios using synthetic graph data.
 - Server-validated obstacle reports persisted as pending; protected moderator review when configured.
 - Coverage and evidence views derived from application data, with demonstration labels.
+- A browser-local **Saved routes** library for street-map snapshots and campus settings, with names, favorites, tags, search, editing and removal. Save a calculated route, then open `/saved`. This does not sync across devices or provide offline street tiles.
+- **Shortest available walk** selects the least-distance street route among the alternatives actually supplied by the provider. The campus **Shortest walk** mode calculates graph distance. Street results are not claimed to be globally shortest or verified step-free.
 - A separate [real-world walking planner](http://localhost:3050/routes) with manual place search, coordinate or map selection, real walking geometry, written directions, and a Google Maps handoff. Its routes are explicitly **accessibility unverified**.
 
 Actual executed verification and remaining limitations are recorded in [the test report](docs/TEST_REPORT.md). A feature list alone is not evidence of successful deployment or community validation.
@@ -58,7 +60,7 @@ The type-check script runs `next typegen` first, so Next’s generated route dec
 
 [Actual public-place walking-route screenshot](output/playwright/live-public-route-desktop.png) · [Provider integration and verification](docs/LIVE_ROUTING.md)
 
-Latest extension verification: **107 local tests and33 browser tests passed**; see the test report for exact scope and limitations.
+Latest extension verification: **113 local tests and 41 browser tests passed**; see the test report for exact scope and limitations.
 
 ## Checks
 

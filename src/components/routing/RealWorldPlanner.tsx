@@ -21,6 +21,8 @@ import {
 import { apiJson } from "@/lib/http-client";
 import { googleWalkingDirections } from "@/lib/live-links";
 import { PlacePicker } from "./PlacePicker";
+import { SaveRouteForm, useSavedRoutes } from './SavedRoutes';
+import { shortestRouteIndex, type SavedRoute } from '@/lib/saved-routes';
 import type {
   LatLon,
   RealPlace,
@@ -49,14 +51,26 @@ function timeEstimate(value: number) {
 
 export function RealWorldPlanner({
   liveAvailable = true,
+  savedId,
 }: {
   liveAvailable?: boolean;
+  savedId?: string;
 }) {
-  const [start, setStart] = useState<RealPlace | null>(null),
-    [end, setEnd] = useState<RealPlace | null>(null);
+  const library = useSavedRoutes();
+  const saved = library.routes.find(item => item.id === savedId);
+  if (savedId && !library.loaded) return <main id="main-content" className="real-page page-width"><p role="status">Opening saved map…</p></main>;
+  if (savedId && (!saved || saved.journey.kind !== 'street')) return <main id="main-content" className="real-page page-width"><h1>Saved map unavailable.</h1><p>{library.error || 'This route is not saved in this browser. It may have been removed or saved on another device.'}</p><Link className="button secondary" href="/saved">Open route library</Link></main>;
+  return <WalkingPlanner key={savedId ?? 'new'} liveAvailable={liveAvailable} saved={saved} />;
+}
+function WalkingPlanner({ liveAvailable, saved }: { liveAvailable: boolean; saved?: SavedRoute }) {
+  const initial = saved?.journey.kind === 'street' ? saved.journey : null;
+  const [start, setStart] = useState<RealPlace | null>(initial?.start ?? null),
+    [end, setEnd] = useState<RealPlace | null>(initial?.end ?? null);
   const [pickTarget, setPickTarget] = useState<"start" | "end" | null>(null);
-  const [response, setResponse] = useState<LiveRouteResponse | null>(null),
+  const [response, setResponse] = useState<LiveRouteResponse | null>(initial ? {provider: 'FOSSGIS OSRM', profile:'walking', dataSource:'OpenStreetMap', routes:[initial.route], fetchedAt:initial.fetchedAt} : null),
     [selectedRoute, setSelectedRoute] = useState(0);
+  const [preference, setPreference] = useState<'suggested' | 'shortest'>(initial?.preference ?? 'suggested');
+  const [snapshot, setSnapshot] = useState(Boolean(initial));
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [tileError, setTileError] = useState(false);
@@ -74,6 +88,7 @@ export function RealWorldPlanner({
     setSelectedRoute(0);
     setError("");
     setBusy(false);
+    setSnapshot(false);
   }
   function changePlace(target: "start" | "end", place: RealPlace | null) {
     invalidate();
@@ -111,7 +126,11 @@ export function RealWorldPlanner({
           end: { lat: end.lat, lon: end.lon },
         }),
       });
-      if (generation.current === current) setResponse(data);
+      if (generation.current === current) {
+        setResponse(data);
+        setSnapshot(false);
+        setSelectedRoute(preference === 'shortest' ? shortestRouteIndex(data.routes) : 0);
+      }
     } catch (e) {
       if (generation.current === current)
         setError(
@@ -144,6 +163,7 @@ export function RealWorldPlanner({
         <div className="route-workspace-switch" aria-label="Routing workspace">
           <Link href="/explore">Demo campus</Link>
           <span aria-current="page">Real-world routes</span>
+          <Link href="/saved">Saved routes</Link>
         </div>
       </header>
       <div className="real-access-notice">
@@ -206,6 +226,14 @@ export function RealWorldPlanner({
             isPicking={pickTarget === "end"}
           />
           <div className="real-calculate">
+            <fieldset className="walking-preference">
+              <legend>Walking preference</legend>
+              {([['suggested', 'Suggested walk'], ['shortest', 'Shortest available walk']] as const).map(([value, label]) => <label key={value}><input type="radio" name="walking-preference" value={value} checked={preference === value} disabled={busy} onChange={() => {
+                setPreference(value);
+                if (response) setSelectedRoute(value === 'shortest' ? shortestRouteIndex(response.routes) : 0);
+              }} />{label}</label>)}
+              <p>Shortest compares the distances of returned walking routes. The provider may offer only one; this is not a guaranteed shortest path.</p>
+            </fieldset>
             <button
               className="button primary"
               disabled={!liveAvailable || !start || !end || busy}
@@ -345,6 +373,7 @@ export function RealWorldPlanner({
           )}
           {route && response && (
             <div className="real-result">
+              {snapshot && <div className="saved-snapshot" role="status"><strong>Saved map · {saved?.name}</strong><p>Route data from {response.fetchedAt.slice(0, 10)}. Conditions may have changed. Calculate again for a fresh route. Street tiles still load online.</p></div>}
               <div className="real-result-summary">
                 <div>
                   <span className="eyebrow">
@@ -360,6 +389,8 @@ export function RealWorldPlanner({
                   <ShieldQuestion size={16} /> Accessibility unverified
                 </span>
               </div>
+              {preference === 'shortest' && <p className="shortest-explanation">{snapshot ? 'This snapshot keeps the selected walk. Recalculate to compare fresh alternatives.' : response.routes.length === 1 ? 'The provider returned one walking route. No shorter alternative was supplied.' : `Shortest of ${response.routes.length} returned walks: ${metres(response.routes[shortestRouteIndex(response.routes)].distanceMeters)}. ${selectedRoute !== shortestRouteIndex(response.routes) ? 'You are viewing a different alternative.' : 'Selected by distance.'}`}</p>}
+              {start && end && <SaveRouteForm key={`${response.fetchedAt}-${route.id}`} defaultName={`${start.label.split(',')[0]} to ${end.label.split(',')[0]}`} journey={{kind:'street', start, end, route, fetchedAt:response.fetchedAt, preference}} />}
               {response.routes.length > 1 && (
                 <div
                   className="real-alternatives"

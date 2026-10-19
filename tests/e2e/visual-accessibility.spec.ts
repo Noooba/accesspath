@@ -133,7 +133,8 @@ test('collapses route details and keeps the mobile navigation keyboard accessibl
   await page.keyboard.press('Enter');
   const drawer = page.getByRole('dialog', { name: 'Find your way.', exact: true });
   await expect(drawer).toBeVisible();
-  await expect(drawer.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('link')).toHaveCount(8);
+  await expect(drawer.getByRole('navigation', { name: 'Mobile navigation' }).getByRole('link')).toHaveCount(9);
+  await expect(drawer.getByRole('link', { name: 'Saved routes', exact: true })).toBeVisible();
   for (let index = 0; index < 10; index += 1) {
     await page.keyboard.press('Tab');
     expect(await drawer.evaluate((element) => element.contains(document.activeElement))).toBe(true);

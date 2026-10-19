@@ -1,5 +1,15 @@
 # AccessPath verification record
 
+## October 18 saved routes and shortest-walk extension
+
+Lint, TypeScript and production build passed. All **113 Vitest tests** passed (7 files, 2.69 seconds). The frozen production build passed **41 browser tests** (39 Chromium + 2 Firefox, 42.9 seconds).
+
+Eight new browser scenarios cover saving and reloading actual street geometry/directions without another routing request; renaming, tag filtering, favorites and confirmed removal; choosing a shorter returned alternative instead of the provider's first suggestion; restoring campus settings; responsive library layouts and keyboard focus/reduced motion; preserving corrupt local data; quota failures without false success; and cross-tab favorite synchronization. Six unit checks cover data validation, coordinate/geometry bounds, capacity, tag normalization, storage errors and minimum-distance selection.
+
+The library was screenshot-inspected at 1440, 768 and 375 pixels. No horizontal overflow was detected. Its mobile axe audit found no violations in the tested state. Browser tests intercept provider requests with explicitly labeled fixtures; these are functional checks, not field evidence or a new real-world provider validation. Existing route/report/moderation regressions also passed. Two initial assertion failures (a Next route-announcer alert and the newly added ninth mobile-navigation link) were corrected before the complete passing run.
+
+Saved entries remain in the browser profile, with explicit no-sync/no-offline-tiles notices. Street snapshots retain their original fetch date and warning text. Campus entries recalculate against the current graph. Shortest street mode compares only the returned alternatives, not the provider's complete network. No packages, credentials, database schema or provider request quota were changed.
+
 **Latest software checkpoint: October 18, 2026 (America/Los_Angeles).** Development began October 16. These results come from executed checks against this project, not from configuration or source inspection alone.
 
 

@@ -38,6 +38,7 @@ export function SiteHeader() {
           {[
             ["/explore", "Route explorer"],
             ["/routes", "Real-world routes"],
+            ["/saved", "Saved routes"],
             ["/about", "How it works"],
             ["/community", "Community"],
           ].map(([href, label]) => (
@@ -81,6 +82,7 @@ export function SiteHeader() {
                   ["/", "Home"],
                   ["/explore", "Route explorer"],
                   ["/routes", "Real-world routes"],
+                  ["/saved", "Saved routes"],
                   ["/report", "Report an obstacle"],
                   ["/about", "How it works"],
                   ["/community", "Community & evidence"],

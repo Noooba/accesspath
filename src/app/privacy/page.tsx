@@ -100,6 +100,11 @@ export default function PrivacyPage() {
             </a>
           </p>
         </section>
+        <section aria-labelledby="privacy-saved">
+          <h2 id="privacy-saved">Your saved maps and routes.</h2>
+          <p>Saving a route stores its name, tags, favorite status and endpoints in this browser’s local storage. Street routes also keep a dated copy of their line and written directions; campus routes keep the chosen scenario and filters. These saved journeys are not uploaded to the reports database or synced across devices.</p>
+          <p>Anyone using the same browser profile may see them. You can remove individual routes from Saved routes; clearing site data removes the whole library. Opening a saved street map still requests online map tiles. Recalculating deliberately sends the endpoints to the routing provider again. Saved routes do not establish current conditions or verified accessibility.</p>
+        </section>
         <section aria-labelledby="privacy-storage">
           <h2 id="privacy-storage">
             <ShieldCheck size={23} aria-hidden="true" /> Storage and review.
