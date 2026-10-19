@@ -4,7 +4,7 @@
 !.env.example
 node_modules
 .next
-data
+/data
 output
 test-results
 playwright-report
