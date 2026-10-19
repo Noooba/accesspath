@@ -135,7 +135,7 @@ export function SiteFooter({ realWorld = false }: { realWorld?: boolean }) {
         <Link href="/admin">Moderator access</Link>
       </div>
       <p className="footer-note">
-        A Neighborhood Hacks 2026 prototype.
+        A prototype.
         <br />
         {realWorld
           ? "Street data. Accessibility unverified."
