@@ -21,7 +21,10 @@ export function parseWheelchairResponse(raw:unknown,start:LatLon,end:LatLon,pref
   const parsed=featureSchema.safeParse(raw);
   if(!parsed.success) throw new HttpError(502,'WHEELCHAIR_RESPONSE_INVALID','The wheelchair provider returned incomplete route data. No unchecked replacement route is shown.');
   const feature=parsed.data.features[0],coordinates:[number,number][]=feature.geometry.coordinates.map(([lon,lat])=>[lat,lon]);
-  if(feature.properties.warnings?.length) throw new HttpError(422,'WHEELCHAIR_PROVIDER_LIMITATION','The wheelchair provider reported limitations. No route is accepted until the profile and constraints can be applied without warnings.');
+  if(feature.properties.warnings?.length) {
+    const messages=feature.properties.warnings.map(warning=>warning&&typeof warning==='object'&&'message'in warning&&typeof warning.message==='string'?warning.message.replace(/[\u0000-\u001f]/g,' ').slice(0,300):'Unspecified provider warning').join(' ');
+    throw new HttpError(422,'WHEELCHAIR_PROVIDER_LIMITATION',`The wheelchair provider reported limitations: ${messages} No route is accepted until those limitations are reviewed.`);
+  }
   const approved=reports.filter(report=>report.reviewStatus==='approved'&&Date.parse(report.expiresAt)>Date.now());
   for(const report of approved) for(let index=1;index<coordinates.length;index++) if(segmentProjection(report,{lat:coordinates[index-1][0],lon:coordinates[index-1][1]},{lat:coordinates[index][0],lon:coordinates[index][1]}).distance<=report.radiusMeters) throw new HttpError(422,'REVIEWED_OBSTACLE_ON_ROUTE','The provider route still crosses a reviewed obstacle area. No route is accepted; choose different endpoints.');
   const snappedStart={lat:coordinates[0][0],lon:coordinates[0][1]},snappedEnd={lat:coordinates.at(-1)![0],lon:coordinates.at(-1)![1]},startGap=distanceMetres(start,snappedStart),endGap=distanceMetres(end,snappedEnd);
