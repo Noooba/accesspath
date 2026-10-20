@@ -11,6 +11,9 @@ import {
   Info,
 } from "lucide-react";
 import type { ObstacleReport } from "@/types";
+import type { WorldObstacle } from '@/types/accessibility';
+type ReviewReport = ObstacleReport | WorldObstacle;
+const isWorld = (report: ReviewReport): report is WorldObstacle => 'kind' in report && report.kind === 'world';
 import { apiJson } from "@/lib/http-client";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 export function AdminReview() {
@@ -19,7 +22,7 @@ export function AdminReview() {
     [key, setKey] = useState(""),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
-    [reports, setReports] = useState<ObstacleReport[]>([]),
+    [reports, setReports] = useState<ReviewReport[]>([]),
     [filter, setFilter] = useState("pending"),
     [notice, setNotice] = useState("");
   const load = useCallback(
@@ -213,7 +216,7 @@ function ReviewItem({
   report,
   onSuccess,
 }: {
-  report: ObstacleReport;
+  report: ReviewReport;
   onSuccess: () => Promise<void>;
 }) {
   const [notes, setNotes] = useState(report.moderatorNotes),
@@ -249,7 +252,7 @@ function ReviewItem({
       <div className="review-item-heading">
         <div>
           <span>{report.category.replaceAll("-", " ")}</span>
-          <h3>{report.edgeId.replaceAll("-", " ")}</h3>
+          <h3>{isWorld(report) ? `Real place · ${report.lat.toFixed(5)}, ${report.lon.toFixed(5)}` : report.edgeId.replaceAll("-", " ")}</h3>
         </div>
         <StatusBadge
           kind={report.reviewStatus === "pending" ? "caution" : "demo"}
@@ -263,6 +266,7 @@ function ReviewItem({
       <p className="review-reference">
         {report.id} · {new Date(report.reportedAt).toLocaleString()}
       </p>
+      {isWorld(report) && <p className="review-caution">Approval enables a {report.radiusMeters} m avoidance area for access-aware walks until {new Date(report.expiresAt).toLocaleDateString()}. Verify the point before approving. Approval is not a complete accessibility survey.</p>}
       <label className="field-label">
         Moderator notes
         <textarea
@@ -275,7 +279,7 @@ function ReviewItem({
           Keep notes factual and free of personal information.
         </small>
       </label>
-      <label className="field-label">
+      {!isWorld(report) && <label className="field-label">
         Explicit pathway operational update
         <select
           value={operation}
@@ -286,7 +290,7 @@ function ReviewItem({
           <option value="open">Mark pathway open</option>
           <option value="unknown">Mark operation unknown</option>
         </select>
-      </label>
+      </label>}
       <p className="review-caution">
         <Info size={14} /> Operational changes affect routing. Use only when
         evidence justifies the update.

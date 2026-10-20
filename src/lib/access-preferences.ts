@@ -1,0 +1,3 @@
+import { z } from 'zod';
+export const accessPreferenceSchema=z.object({avoidRamps:z.boolean(),maxSlopePercent:z.number().min(0).max(15),minWidthCm:z.number().min(60).max(200),maxKerbCm:z.number().min(0).max(5),requireKnownAccess:z.boolean()}).strict();
+export const accessSummarySchema=z.object({source:z.literal('OpenStreetMap'),checkedSegments:z.number().int().nonnegative().max(30000),excludedSegments:z.number().int().nonnegative().max(100000),rampSegments:z.number().int().nonnegative().max(30000),unknownSegments:z.number().int().nonnegative().max(30000),reviewedObstaclesAvoided:z.number().int().nonnegative().max(200),pendingReportsNearby:z.number().int().nonnegative().max(200),preferences:accessPreferenceSchema});

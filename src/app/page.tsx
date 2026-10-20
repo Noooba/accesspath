@@ -17,6 +17,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { CampusPreview } from "@/components/map/CampusPreview";
 import { DEMO_GRAPH } from "@/data/demo-campus";
 import { route } from "@/lib/routing";
+import { AccessModel } from '@/components/ui/AccessModel';
 export default function Home() {
   const strict = route(DEMO_GRAPH, "main-gate", "library", "confirmed"),
     short = route(DEMO_GRAPH, "main-gate", "library", "shortest");
@@ -35,15 +36,16 @@ export default function Home() {
               works for you.
             </h1>
             <p>
-              Compare pedestrian routes using documented accessibility
-              information—including stairs, ramps, slopes, and obstacles.
+              Walking and rolling, with your access needs in view. Compare
+              stairs, ramps, slopes and reported obstacles—whether you use a
+              wheelchair, a mobility aid or simply need a gentler route.
             </p>
             <div className="hero-actions">
-              <Link className="button primary" href="/explore">
-                Explore routes <ArrowUpRight size={18} />
+              <Link className="button primary" href="/routes">
+                Plan a real-world walk <ArrowUpRight size={18} />
               </Link>
-              <Link className="text-link" href="/about">
-                See how it works <ArrowRight size={16} />
+              <Link className="text-link" href="/routes?access=1">
+                Wheelchair & mobility options <ArrowRight size={16} />
               </Link>
             </div>
             <div className="hero-trust">
@@ -108,6 +110,7 @@ export default function Home() {
             Understand the data <ArrowUpRight size={14} />
           </Link>
         </div>
+        <div className="page-width access-home-section"><AccessModel/></div>
         <section className="approach-section page-width">
           <div className="section-heading">
             <div>
@@ -268,8 +271,8 @@ export default function Home() {
                 review by people who use these paths.
               </p>
             </div>
-            <Link className="button secondary" href="/report">
-              Report a demo obstacle <ArrowUpRight size={16} />
+            <Link className="button secondary" href="/report?place=world">
+              Report an obstacle anywhere <ArrowUpRight size={16} />
             </Link>
           </div>
         </section>

@@ -1,5 +1,6 @@
 import { SiteHeader, SiteFooter } from "@/components/layout/SiteHeader";
-import { ReportForm } from "@/components/reports/ReportForm";
+import { ReportWorkspace } from "@/components/reports/ReportWorkspace";
+import { latLon } from '@/lib/live-routing/validation';
 import { getStorageStatus } from "@/lib/database/client";
 export default async function Report({
   searchParams,
@@ -7,6 +8,7 @@ export default async function Report({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const query = await searchParams;
+  const selectedPoint = latLon.safeParse({lat:typeof query.lat==='string'?Number(query.lat):NaN,lon:typeof query.lon==='string'?Number(query.lon):NaN});
   return (
     <>
       <SiteHeader />
@@ -19,11 +21,13 @@ export default async function Report({
             with better information.
           </h1>
           <p>
-            Share an observation about a documented segment. Reports are saved
+            Share an observation at a real place or a demo-campus segment. Reports are saved
             as pending review, never automatically treated as verified facts.
           </p>
         </header>
-        <ReportForm
+        <ReportWorkspace
+          realPlace={query.place==='world'}
+          initialPoint={selectedPoint.success?selectedPoint.data:undefined}
           storageAvailable={getStorageStatus().available}
           initialSite={typeof query.site === "string" ? query.site : undefined}
           initialEdge={typeof query.edge === "string" ? query.edge : undefined}
@@ -32,7 +36,7 @@ export default async function Report({
           }
         />
       </main>
-      <SiteFooter />
+      <SiteFooter realWorld />
     </>
   );
 }

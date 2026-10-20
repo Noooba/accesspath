@@ -34,11 +34,10 @@ export default function PrivacyPage() {
         </section>
         <section aria-labelledby="privacy-location">
           <h2 id="privacy-location">
-            <MapPinOff size={23} aria-hidden="true" /> No live location or photo
-            collection.
+            <MapPinOff size={23} aria-hidden="true" /> Location is your choice.
           </h2>
           <p>
-            The app does not request GPS, camera, microphone, or photo uploads.
+            GPS permission is requested only when you choose a location or live-guidance button. Camera, microphone and photo uploads are not requested.
             The demo uses a schematic map with no external tile requests. There
             is no advertising tracker or visitor analytics integration in the
             application.
@@ -49,6 +48,8 @@ export default function PrivacyPage() {
             not store visitor IP addresses or device identifiers.
           </p>
         </section>
+        <section aria-labelledby="privacy-live-guidance"><h2 id="privacy-live-guidance">When you start live guidance.</h2><p>Your browser supplies position and accuracy while the page is open. The moving position stays in this tab, is not recorded as location history, and tracking stops when you press Stop, leave the planner, or close the page. If you enable automatic recalculation, an off-route point and destination are sent to AccessPath and the routing service, at most once every 45 seconds. Low-accuracy or stale fixes do not trigger automatic rerouting. Browser and phone restrictions can suspend guidance in the background.</p><p>Access-aware routing sends a bounded map area to the <a href="https://overpass.private.coffee/" target="_blank" rel="noopener noreferrer">Private.coffee Overpass service (terms and privacy)</a> to read OpenStreetMap pathway tags. The downloaded map is temporarily cached for up to ten minutes; no travel history is stored. Map tiles reveal the viewed area to the tile provider. Optional spoken prompts use your browser or operating system’s voice service.</p></section>
+        <section aria-labelledby="privacy-public-obstacles"><h2 id="privacy-public-obstacles">Real-place obstacle reports are public.</h2><p>Before submitting, you must confirm that the selected obstacle coordinates and description will be public. The report stores its category, radius, timestamp, review status and seven-day expiry. Report public pathways only; do not include a person, medical information, contact details or a private address. Only reviewed, active reports affect access-aware street routing. Pending observations remain unverified. Expiry removes a report from active map avoidance, not automatically from database retention.</p></section>
         <section aria-labelledby="privacy-map-services">
           <h2 id="privacy-map-services">When you use real-world routing.</h2>
           <p>

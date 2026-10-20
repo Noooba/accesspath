@@ -3,8 +3,8 @@ import { HttpError } from '@/lib/security/http';
 export const PROVIDER_TIMEOUT_MS = 12_000;
 export const MAX_UPSTREAM_BYTES = 4 * 1024 * 1024;
 /** Only operator-configured HTTPS bases are supported; request bodies cannot supply URLs. */
-export function providerBase(provider: 'photon' | 'foot-router') {
-  const configured = provider === 'photon' ? process.env.PHOTON_API_URL || 'https://photon.komoot.io/api/' : process.env.FOOT_ROUTER_URL || 'https://routing.openstreetmap.de/routed-foot/route/v1/foot/';
+export function providerBase(provider: 'photon' | 'foot-router' | 'overpass') {
+  const configured = provider === 'overpass' ? process.env.OVERPASS_API_URL || 'https://overpass.private.coffee/api/interpreter' : provider === 'photon' ? process.env.PHOTON_API_URL || 'https://photon.komoot.io/api/' : process.env.FOOT_ROUTER_URL || 'https://routing.openstreetmap.de/routed-foot/route/v1/foot/';
   let url: URL;
   try { url = new URL(configured); }
   catch { throw new HttpError(503, 'LIVE_PROVIDER_CONFIG', 'The map provider configuration is invalid.'); }
@@ -14,11 +14,11 @@ export function providerBase(provider: 'photon' | 'foot-router') {
   if (provider === 'foot-router' && !url.pathname.endsWith('/foot/')) throw new HttpError(503, 'LIVE_PROVIDER_CONFIG', 'The configured OSRM endpoint must use an explicitly deployed foot profile.');
   return url;
 }
-export async function providerJson(url: URL, options: { allowClientError?: boolean; maxBytes?: number; timeoutMs?: number } = {}): Promise<unknown> {
+export async function providerJson(url: URL, options: { allowClientError?: boolean; maxBytes?: number; timeoutMs?: number; formBody?: string } = {}): Promise<unknown> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), options.timeoutMs ?? PROVIDER_TIMEOUT_MS);
   try {
-    const response = await fetch(url, { signal: controller.signal, cache: 'no-store', redirect: 'error', headers: { Accept: 'application/json', 'User-Agent': process.env.LIVE_PROVIDER_USER_AGENT || 'AccessPath/0.1 (low-volume walking-map demonstration; manual requests only)' } });
+    const response = await fetch(url, { signal: controller.signal, cache: 'no-store', redirect: 'error', ...(options.formBody?{method:'POST',body:options.formBody}:{}),headers: { Accept: 'application/json',...(options.formBody?{'Content-Type':'application/x-www-form-urlencoded'}:{}),'User-Agent': process.env.LIVE_PROVIDER_USER_AGENT || 'AccessPath/0.2 (+https://accesspath-alpha.vercel.app; low-volume opt-in walking guidance)' } });
     if (response.status === 429) throw new HttpError(429, 'LIVE_UPSTREAM_LIMIT', 'The public map provider is limiting requests. Please try again later.');
     if (!response.ok && !(options.allowClientError && response.status === 400)) throw new HttpError(502, 'LIVE_PROVIDER_UNAVAILABLE', 'The public map service is unavailable. Try again later.');
     const limit = options.maxBytes ?? MAX_UPSTREAM_BYTES;

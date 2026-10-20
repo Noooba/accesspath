@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import {
   CircleMarker,
+  Circle,
   MapContainer,
   Polyline,
   TileLayer,
@@ -25,6 +26,8 @@ import type {
   RealPlace,
   RealWalkingRoute,
 } from "@/types/live-routing";
+import type { LocationFix } from '@/lib/navigation';
+import type { WorldObstacle } from '@/types/accessibility';
 
 type Props = {
   start: RealPlace | null;
@@ -33,7 +36,15 @@ type Props = {
   pickTarget: "start" | "end" | null;
   onPick: (target: "start" | "end", point: LatLon) => void;
   onTileError: () => void;
+  position?: LocationFix | null;
+  followPosition?: boolean;
+  obstacles?: WorldObstacle[];
 };
+function FollowPosition({position,enabled}:{position?:LocationFix|null;enabled:boolean}) {
+  const map=useMap();
+  useEffect(()=>{if(enabled&&position&&Math.abs(position.lat)<=MAX_MAP_LATITUDE) map.setView([position.lat,position.lon],Math.max(17,map.getZoom()),{animate:false});},[enabled,position,map]);
+  return null;
+}
 
 const INITIAL_CENTER: [number, number] = [33.8096, -118.3539];
 // Web Mercator has no representation of the poles. Do not silently move a
@@ -148,7 +159,7 @@ function PointPicking({ pickTarget, onPick }: Pick<Props, "pickTarget" | "onPick
   return null;
 }
 
-export default function RealWorldMap({ start, end, route, pickTarget, onPick, onTileError }: Props) {
+export default function RealWorldMap({ start, end, route, pickTarget, onPick, onTileError,position,followPosition=false,obstacles=[] }: Props) {
   const { points, startCanRender, endCanRender, routeCanRender, hasUnmappedCoordinates } = useMemo(() => {
     const startCanRender = Boolean(start && isProjectable(start.lat, start.lon));
     const endCanRender = Boolean(end && isProjectable(end.lat, end.lon));
@@ -202,13 +213,16 @@ export default function RealWorldMap({ start, end, route, pickTarget, onPick, on
         eventHandlers={{ tileerror: onTileError }}
       />
       <Controls points={points} />
+      <FollowPosition position={position} enabled={followPosition}/>
       <PointPicking pickTarget={pickTarget} onPick={onPick} />
+      {position&&isProjectable(position.lat,position.lon)&&<><Circle center={[position.lat,position.lon]} radius={Math.min(500,Math.max(1,position.accuracy))} pathOptions={{color:'#245ac1',weight:1,fillOpacity:.08}}/><CircleMarker center={[position.lat,position.lon]} radius={8} pathOptions={{color:'#fff',weight:3,fillColor:'#245ac1',fillOpacity:1}}><Tooltip>Your GPS position · accuracy about {Math.round(position.accuracy)} m</Tooltip></CircleMarker></>}
+      {obstacles.filter(report=>report.reviewStatus!=='rejected'&&isProjectable(report.lat,report.lon)).map(report=><Circle key={report.id} center={[report.lat,report.lon]} radius={report.radiusMeters} pathOptions={{color:report.reviewStatus==='approved'?'#b42332':'#a14e09',weight:2,fillOpacity:.15,dashArray:report.reviewStatus==='pending'?'4 5':undefined}}><Tooltip>{report.category.replaceAll('-',' ')} · {report.reviewStatus==='approved'?'reviewed obstacle area':'unreviewed report'} · expires {report.expiresAt.slice(0,10)}</Tooltip></Circle>)}
       {route && routeCanRender && route.coordinates.length > 1 && (
         <Polyline
           positions={route.coordinates}
           pathOptions={{ color: "#087f78", weight: 6, opacity: 0.95, lineCap: "round" }}
         >
-          <Tooltip>Calculated walking route · accessibility not verified</Tooltip>
+          <Tooltip>Calculated walking route · review the access details before travel</Tooltip>
         </Polyline>
       )}
       {hasStartGap && start && route && (

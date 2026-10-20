@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { accessPreferenceSchema, accessSummarySchema } from './access-preferences';
 
 export const SAVED_ROUTES_KEY = 'accesspath.saved-routes.v1';
 export const SAVED_ROUTES_EVENT = 'accesspath:saved-routes';
@@ -15,7 +16,7 @@ const walkingRoute = z.object({
 });
 const filters = z.object({ avoidStairs: z.boolean(), requireDocumented: z.boolean(), avoidSteepSlopes: z.boolean(), maxSlopePercent: positive.max(100), avoidUneven: z.boolean(), excludeBlocked: z.boolean() });
 export const savedJourneySchema = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('street'), start: place, end: place, route: walkingRoute, fetchedAt: z.iso.datetime(), preference: z.enum(['suggested', 'shortest']) }),
+  z.object({ kind: z.literal('street'), start: place, end: place, route: walkingRoute, fetchedAt: z.iso.datetime(), preference: z.enum(['suggested', 'shortest','accessibility']), accessPreferences:accessPreferenceSchema.optional(),access:accessSummarySchema.optional() }),
   z.object({ kind: z.literal('campus'), siteId: z.string().min(1).max(100), startId: z.string().min(1).max(100), endId: z.string().min(1).max(100), startLabel: z.string().min(1).max(200), endLabel: z.string().min(1).max(200), distanceMeters: positive, mode: z.enum(['shortest', 'confirmed', 'exploratory']), scenario: z.enum(['baseline', 'closure', 'uncertain', 'disconnected']), filters }),
 ]);
 export type SavedJourney = z.infer<typeof savedJourneySchema>;

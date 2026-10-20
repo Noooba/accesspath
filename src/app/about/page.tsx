@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight, GitFork, ListOrdered, ShieldCheck } from "lucide-react";
 import { SiteHeader, SiteFooter } from "@/components/layout/SiteHeader";
 import { DEMO_GRAPH } from "@/data/demo-campus";
+import { AccessModel } from '@/components/ui/AccessModel';
 
 export default function AboutPage() {
   return (
@@ -16,6 +17,7 @@ export default function AboutPage() {
             barrier, an unknown condition, and a documented pathway separate.
           </p>
         </header>
+        <AccessModel compact/>
 
         <aside className="data-note">
           <strong>A demonstration, clearly labeled.</strong> AccessPath Demo
@@ -53,6 +55,8 @@ export default function AboutPage() {
             provider; the demonstration graph is not substituted if a request
             fails.
           </p>
+          <p>Wheelchair / mobility access uses a separate local pedestrian graph from OpenStreetMap, removing mapped stairs, restrictions, unsuitable surfaces, excessive slopes and reviewed obstacle areas before Dijkstra routing. Gentle ramps are allowed with warnings unless you exclude them. Missing slope, width, surface and wheelchair tags are shown as unknown; strict mode requires mapped details. This beta covers endpoints up to 3 km apart and cannot verify unmapped endpoint connections or current field conditions.</p>
+          <p>Opt-in foreground GPS guidance shows your moving position and next step, with optional browser speech and controlled off-route recalculation. It is not a replacement for a maintained, field-verified mobility-navigation service. Driving, cycling and bus/transit options open the corresponding Google Maps directions; live transit coverage and vehicle accessibility must be checked with the provider.</p>
           <p>
             These are ordinary walking directions. They can include steps or
             inaccessible sections. The provider response does not verify slopes,
@@ -161,8 +165,8 @@ export default function AboutPage() {
         <section aria-labelledby="coverage-method">
           <h2 id="coverage-method">A small, honest starting point.</h2>
           <p>
-            The prototype currently supports a fictional campus. Palos Verdes
-            Peninsula is only a potential pilot: no real school paths,
+            The campus workspace uses fictional data; street planning uses OpenStreetMap with the limits described above. Palos Verdes
+            Peninsula is only a potential campus pilot: no real school paths,
             observations, partnership, or impact result have been supplied. A
             real pilot needs permitted measurements, documented review,
             participant testing, and a process for keeping conditions current.

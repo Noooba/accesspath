@@ -17,12 +17,21 @@ import {
   ShieldQuestion,
   TriangleAlert,
   X,
+  Accessibility,
+  LocateFixed,
+  Footprints,
+  Car,
+  Bike,
+  Bus,
 } from "lucide-react";
 import { apiJson } from "@/lib/http-client";
-import { googleWalkingDirections } from "@/lib/live-links";
+import { googleDirections, type TravelMode } from "@/lib/live-links";
 import { PlacePicker } from "./PlacePicker";
 import { SaveRouteForm, useSavedRoutes } from './SavedRoutes';
 import { shortestRouteIndex, type SavedRoute } from '@/lib/saved-routes';
+import { DEFAULT_ACCESS_PREFERENCES, type AccessPreferences } from '@/types/accessibility';
+import { useLiveGuide } from './useLiveGuide';
+import { LiveGuidance } from './LiveGuidance';
 import type {
   LatLon,
   RealPlace,
@@ -52,41 +61,54 @@ function timeEstimate(value: number) {
 export function RealWorldPlanner({
   liveAvailable = true,
   savedId,
+  initialAccess=false,
 }: {
   liveAvailable?: boolean;
   savedId?: string;
+  initialAccess?: boolean;
 }) {
   const library = useSavedRoutes();
   const saved = library.routes.find(item => item.id === savedId);
   if (savedId && !library.loaded) return <main id="main-content" className="real-page page-width"><p role="status">Opening saved map…</p></main>;
   if (savedId && (!saved || saved.journey.kind !== 'street')) return <main id="main-content" className="real-page page-width"><h1>Saved map unavailable.</h1><p>{library.error || 'This route is not saved in this browser. It may have been removed or saved on another device.'}</p><Link className="button secondary" href="/saved">Open route library</Link></main>;
-  return <WalkingPlanner key={savedId ?? 'new'} liveAvailable={liveAvailable} saved={saved} />;
+  return <WalkingPlanner key={savedId ?? `new-${initialAccess}`} liveAvailable={liveAvailable} saved={saved} initialAccess={initialAccess} />;
 }
-function WalkingPlanner({ liveAvailable, saved }: { liveAvailable: boolean; saved?: SavedRoute }) {
+function WalkingPlanner({ liveAvailable, saved,initialAccess }: { liveAvailable: boolean; saved?: SavedRoute;initialAccess:boolean }) {
   const initial = saved?.journey.kind === 'street' ? saved.journey : null;
   const [start, setStart] = useState<RealPlace | null>(initial?.start ?? null),
     [end, setEnd] = useState<RealPlace | null>(initial?.end ?? null);
   const [pickTarget, setPickTarget] = useState<"start" | "end" | null>(null);
-  const [response, setResponse] = useState<LiveRouteResponse | null>(initial ? {provider: 'FOSSGIS OSRM', profile:'walking', dataSource:'OpenStreetMap', routes:[initial.route], fetchedAt:initial.fetchedAt} : null),
+  const [response, setResponse] = useState<LiveRouteResponse | null>(initial ? {provider:initial.access?'OpenStreetMap pedestrian graph':'FOSSGIS OSRM',profile:'walking',dataSource:'OpenStreetMap',routes:[initial.route],fetchedAt:initial.fetchedAt,...(initial.access?{access:initial.access}:{})} : null),
     [selectedRoute, setSelectedRoute] = useState(0);
-  const [preference, setPreference] = useState<'suggested' | 'shortest'>(initial?.preference ?? 'suggested');
+  const [preference, setPreference] = useState<'suggested' | 'shortest' | 'accessibility'>(initial?.preference ?? (initialAccess?'accessibility':'suggested'));
+  const [accessPreferences,setAccessPreferences]=useState<AccessPreferences>(initial?.accessPreferences ?? DEFAULT_ACCESS_PREFERENCES);
+  const [travelMode,setTravelMode]=useState<TravelMode>('walking');
+  const [acknowledged,setAcknowledged]=useState(false),[followPosition,setFollowPosition]=useState(true);
   const [snapshot, setSnapshot] = useState(Boolean(initial));
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
+    [rerouteFailed,setRerouteFailed]=useState(false),
     [tileError, setTileError] = useState(false);
   const controller = useRef<AbortController | null>(null),
     generation = useRef(0),
     errorRef = useRef<HTMLDivElement>(null);
   useEffect(() => () => controller.current?.abort(), []);
   useEffect(() => {
-    if (error) errorRef.current?.focus();
-  }, [error]);
+    if (error&&!rerouteFailed) errorRef.current?.focus();
+  }, [error,rerouteFailed]);
+  const route = response?.routes[selectedRoute] ?? null;
+  function reroute(point:LatLon) {return calculate(point,true);}
+  const guide=useLiveGuide(route,reroute,liveAvailable&&!busy&&travelMode==='walking');
+  useEffect(()=>{if(guide.tracking)window.scrollTo({top:0,behavior:'auto'});},[guide.tracking]);
   function invalidate() {
+    guide.stop();
+    setAcknowledged(false);
     generation.current++;
     controller.current?.abort();
     setResponse(null);
     setSelectedRoute(0);
     setError("");
+    setRerouteFailed(false);
     setBusy(false);
     setSnapshot(false);
   }
@@ -105,33 +127,40 @@ function WalkingPlanner({ liveAvailable, saved }: { liveAvailable: boolean; save
     });
   }
   const markTileError = useCallback(() => setTileError(true), []);
-  async function calculate() {
+  async function calculate(originOverride?: LatLon, automatic = false) {
     if (!start || !end) return;
+    if(!automatic) guide.stop();
     controller.current?.abort();
     const current = ++generation.current,
       c = new AbortController();
     controller.current = c;
-    const timer = setTimeout(() => c.abort(), 22000);
+    const timer = setTimeout(() => c.abort(), preference==='accessibility'?45000:22000);
     setBusy(true);
     setError("");
-    setResponse(null);
-    setSelectedRoute(0);
+    setRerouteFailed(false);
+    if(!automatic) setResponse(null);
+    if(!automatic) setSelectedRoute(0);
     try {
-      const data = await apiJson<LiveRouteResponse>("/api/live/route", {
+      const data = await apiJson<LiveRouteResponse>(preference==='accessibility'?'/api/live/access-route':"/api/live/route", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         signal: c.signal,
         body: JSON.stringify({
-          start: { lat: start.lat, lon: start.lon },
+          start: originOverride ?? { lat: start.lat, lon: start.lon },
           end: { lat: end.lat, lon: end.lon },
+          ...(preference==='accessibility'?{preferences:accessPreferences}:{}),
         }),
       });
       if (generation.current === current) {
         setResponse(data);
         setSnapshot(false);
         setSelectedRoute(preference === 'shortest' ? shortestRouteIndex(data.routes) : 0);
+        setAcknowledged(false);
+        if(originOverride) setStart({...originOverride,id:'current-location',label:'Current location',source:'coordinates'});
+        if(automatic && (data.access?.unknownSegments || data.access?.rampSegments || data.routes.some(route=>route.startSnapDistanceMeters>20 || route.endSnapDistanceMeters>20))) guide.stop();
       }
     } catch (e) {
+      if(generation.current===current&&automatic){setRerouteFailed(true);guide.stop();}
       if (generation.current === current)
         setError(
           e instanceof Error && e.name === "AbortError"
@@ -145,10 +174,11 @@ function WalkingPlanner({ liveAvailable, saved }: { liveAvailable: boolean; save
       if (generation.current === current) setBusy(false);
     }
   }
-  const route = response?.routes[selectedRoute] ?? null;
+  const isAccess=preference==='accessibility';
+  function changeAccessPreference(next:Partial<AccessPreferences>) {invalidate();setAccessPreferences(current=>({...current,...next}));}
 
   return (
-    <main id="main-content" tabIndex={-1} className="real-page page-width">
+    <main id="main-content" tabIndex={-1} className={`real-page page-width ${guide.tracking?'is-navigating':''}`}>
       <header className="real-page-heading">
         <div>
           <span className="eyebrow">
@@ -166,14 +196,13 @@ function WalkingPlanner({ liveAvailable, saved }: { liveAvailable: boolean; save
           <Link href="/saved">Saved routes</Link>
         </div>
       </header>
+      <fieldset className="travel-modes"><legend>How are you travelling?</legend>{([['walking','Walk / roll',Footprints],['driving','Drive',Car],['bicycling','Cycle',Bike],['transit','Bus / transit',Bus]] as const).map(([value,label,Icon])=><label key={value} className={travelMode===value?'selected':''}><input type="radio" name="travel-mode" checked={travelMode===value} onChange={()=>{invalidate();setTravelMode(value);}}/><Icon size={19}/>{label}</label>)}</fieldset>
       <div className="real-access-notice">
         <ShieldQuestion size={22} />
         <div>
-          <strong>Walking directions · accessibility unverified</strong>
+          <strong>{travelMode!=='walking'?'Driving, cycling and transit directions':isAccess?'Access-aware walking · mapped barriers excluded':'Walking directions · accessibility unverified'}</strong>
           <p>
-            These routes may include stairs or inaccessible sections. Step-free
-            access, slopes, widths and curb ramps have not been verified. The
-            demo’s confirmed step-free rules do not apply here.
+            {travelMode!=='walking'?'Choose places below, then open the selected travel mode in Google Maps. Transit schedules and vehicle accessibility are supplied there; availability varies by area. AccessPath’s built-in live guidance is for walking and rolling.':isAccess?'This local beta excludes mapped stairs, restricted paths, unsuitable surfaces, excessive slopes and reviewed obstacles. Missing tags and unmapped endpoint gaps remain unknown. It is not a field-verified wheelchair-accessible guarantee.':'These routes may include stairs or inaccessible sections. Step-free access, slopes, widths and curb ramps have not been verified. The demo’s confirmed step-free rules do not apply here.'}
           </p>
         </div>
       </div>
@@ -204,6 +233,9 @@ function WalkingPlanner({ liveAvailable, saved }: { liveAvailable: boolean; save
             }
             isPicking={pickTarget === "start"}
           />
+          <button className="button secondary location-start" disabled={guide.locating} onClick={()=>guide.locate(point=>changePlace('start',{...point,id:'current-location',label:'Current location',source:'coordinates'}))}><LocateFixed size={16}/>{guide.locating?'Finding your position…':'Use my current location'}</button>
+          <p className="location-disclosure">Asks your browser for permission. The point stays here until you calculate a route or open an external directions link.</p>
+          {guide.error&&!route&&<p className="saved-error" role="alert">{guide.error}</p>}
           <button
             className="real-swap"
             disabled={!start && !end}
@@ -226,35 +258,37 @@ function WalkingPlanner({ liveAvailable, saved }: { liveAvailable: boolean; save
             isPicking={pickTarget === "end"}
           />
           <div className="real-calculate">
-            <fieldset className="walking-preference">
+            {travelMode==='walking'&&<fieldset className="walking-preference">
               <legend>Walking preference</legend>
-              {([['suggested', 'Suggested walk'], ['shortest', 'Shortest available walk']] as const).map(([value, label]) => <label key={value}><input type="radio" name="walking-preference" value={value} checked={preference === value} disabled={busy} onChange={() => {
+              {([['suggested', 'Suggested walk'], ['shortest', 'Shortest available walk'], ['accessibility','Wheelchair / mobility access']] as const).map(([value, label]) => <label key={value}><input type="radio" name="walking-preference" value={value} checked={preference === value} disabled={busy} onChange={() => {
+                if(value==='accessibility'||preference==='accessibility') invalidate();
                 setPreference(value);
-                if (response) setSelectedRoute(value === 'shortest' ? shortestRouteIndex(response.routes) : 0);
+                if (response && value!=='accessibility' && preference!=='accessibility') setSelectedRoute(value === 'shortest' ? shortestRouteIndex(response.routes) : 0);
               }} />{label}</label>)}
               <p>Shortest compares the distances of returned walking routes. The provider may offer only one; this is not a guaranteed shortest path.</p>
-            </fieldset>
-            <button
+            </fieldset>}
+            {isAccess&&travelMode==='walking'&&<fieldset className="access-preferences"><legend><Accessibility size={16}/> Plan around your access needs</legend><p>Always excludes mapped stairs and reviewed obstacle areas. Local walks up to 3 km apart; only connected mapped pedestrian paths are used.</p><label className="access-check"><input type="checkbox" checked={accessPreferences.avoidRamps} onChange={e=>changeAccessPreference({avoidRamps:e.target.checked})}/>Avoid mapped ramps</label><label className="access-check"><input type="checkbox" checked={accessPreferences.requireKnownAccess} onChange={e=>changeAccessPreference({requireKnownAccess:e.target.checked})}/>Only paths with mapped access details</label><label>Maximum slope (%)<input type="number" min={0} max={15} step={.5} value={accessPreferences.maxSlopePercent} onChange={e=>changeAccessPreference({maxSlopePercent:Number(e.target.value)})}/></label><label>Minimum clear width (cm)<input type="number" min={60} max={200} step={5} value={accessPreferences.minWidthCm} onChange={e=>changeAccessPreference({minWidthCm:Number(e.target.value)})}/></label><label>Maximum kerb height (cm)<input type="number" min={0} max={5} step={.5} value={accessPreferences.maxKerbCm} onChange={e=>changeAccessPreference({maxKerbCm:Number(e.target.value)})}/></label><p>These are personal planning preferences, not accessibility standards. Gentle ramps are allowed by default and always flagged before guidance starts.</p></fieldset>}
+            {travelMode==='walking'&&<button
               className="button primary"
               disabled={!liveAvailable || !start || !end || busy}
               onClick={() => void calculate()}
             >
               {busy ? <span className="button-spinner" /> : <Route size={17} />}
-              {busy ? "Finding a walking route…" : "Calculate walking route"}
-            </button>
+              {busy ? "Finding a walking route…" : isAccess?'Find access-aware walk':"Calculate walking route"}
+            </button>}
             {start && end && (
               <a
-                href={googleWalkingDirections(start, end)}
+                href={googleDirections(start, end,travelMode,travelMode!=='transit')}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="button secondary"
-                aria-label="Open walking directions in Google Maps, opens in a new tab"
+                aria-label={`Open ${travelMode==='walking'?'walking':travelMode==='transit'?'transit':travelMode==='bicycling'?'cycling':'driving'} directions in Google Maps, opens in a new tab`}
               >
-                Open in Google Maps <ExternalLink size={15} />
+                {travelMode==='transit'?'Open transit routes & schedules':travelMode==='walking'?'Open in Google Maps':`Open ${travelMode==='driving'?'driving':'cycling'} directions`} <ExternalLink size={15} />
               </a>
             )}
             {start && end && (
-              <p>Google Maps calculates its own route from these endpoints.</p>
+              <p>Google Maps calculates its own route from these endpoints. AccessPath’s access filters are not carried over.</p>
             )}
           </div>
           <details className="real-data-details">
@@ -266,8 +300,7 @@ function WalkingPlanner({ liveAvailable, saved }: { liveAvailable: boolean; save
               Street tiles load from OpenStreetMap. A search is sent to Photon
               only when you press Search; routing sends your selected
               coordinates to FOSSGIS. Their servers may log requests. Nothing
-              here requests your live location or stores your journey in the
-              report database.
+              is saved as a journey in the report database. Optional location and live guidance ask permission only when you activate them.
             </p>
             <p>
               Google receives the endpoints only if you open its link. These
@@ -289,6 +322,7 @@ function WalkingPlanner({ liveAvailable, saved }: { liveAvailable: boolean; save
               >
                 Routing service policy <ArrowUpRight size={12} />
               </a>
+              <a href="https://overpass.private.coffee/#terms" target="_blank" rel="noopener noreferrer">Access-map service &amp; privacy <ArrowUpRight size={12}/></a>
             </p>
           </details>
         </section>
@@ -310,6 +344,9 @@ function WalkingPlanner({ liveAvailable, saved }: { liveAvailable: boolean; save
               pickTarget={pickTarget}
               onPick={picked}
               onTileError={markTileError}
+              position={guide.fix}
+              followPosition={guide.tracking&&followPosition&&guide.reliable}
+              obstacles={response?.obstacles}
             />
             {pickTarget && (
               <div className="real-pick-notice" role="status">
@@ -327,6 +364,7 @@ function WalkingPlanner({ liveAvailable, saved }: { liveAvailable: boolean; save
               </div>
             )}
           </div>
+          {guide.tracking&&<label className="access-check follow-position"><input type="checkbox" checked={followPosition} onChange={e=>setFollowPosition(e.target.checked)}/>Keep the map centered on me</label>}
           {tileError && (
             <p className="real-service-note" role="status">
               <Info size={16} /> Street tiles could not load. Place search,
@@ -341,11 +379,10 @@ function WalkingPlanner({ liveAvailable, saved }: { liveAvailable: boolean; save
               tabIndex={-1}
               ref={errorRef}
             >
-              <strong>We couldn’t load that walking route.</strong>
+              <strong>{rerouteFailed?'We couldn’t update your route.':'We couldn’t load that walking route.'}</strong>
               <p>{error}</p>
               <p>
-                Check the two places and try again. No substitute route has been
-                generated.
+                {rerouteFailed?'Live guidance has stopped. The previous route remains visible for reference; calculate again before continuing guidance.':'Check the two places and try again. No substitute route has been generated.'}
               </p>
             </div>
           )}
@@ -377,11 +414,11 @@ function WalkingPlanner({ liveAvailable, saved }: { liveAvailable: boolean; save
               <div className="real-result-summary">
                 <div>
                   <span className="eyebrow">
-                    <Navigation size={14} /> Ordinary walking route
+                  <Navigation size={14} /> {response.access?'Access-aware walk':'Ordinary walking route'}
                   </span>
                   <h2>{metres(route.distanceMeters)}</h2>
                   <p>
-                    {timeEstimate(route.durationSeconds)} · provider estimate,
+                    {timeEstimate(route.durationSeconds)} · {response.access?'illustrative pace estimate':'provider estimate'},
                     not a personal mobility estimate
                   </p>
                 </div>
@@ -390,7 +427,10 @@ function WalkingPlanner({ liveAvailable, saved }: { liveAvailable: boolean; save
                 </span>
               </div>
               {preference === 'shortest' && <p className="shortest-explanation">{snapshot ? 'This snapshot keeps the selected walk. Recalculate to compare fresh alternatives.' : response.routes.length === 1 ? 'The provider returned one walking route. No shorter alternative was supplied.' : `Shortest of ${response.routes.length} returned walks: ${metres(response.routes[shortestRouteIndex(response.routes)].distanceMeters)}. ${selectedRoute !== shortestRouteIndex(response.routes) ? 'You are viewing a different alternative.' : 'Selected by distance.'}`}</p>}
-              {start && end && <SaveRouteForm key={`${response.fetchedAt}-${route.id}`} defaultName={`${start.label.split(',')[0]} to ${end.label.split(',')[0]}`} journey={{kind:'street', start, end, route, fetchedAt:response.fetchedAt, preference}} />}
+              {response.access&&<div className="access-result-summary"><h3>What the map supports</h3><p>{response.access.checkedSegments} pedestrian segments checked · {response.access.excludedSegments} excluded by your preferences or reviewed obstacles.</p><p>{response.access.rampSegments} mapped ramp segments · {response.access.unknownSegments} segments with missing access details.</p><p>Reviewed obstacle areas excluded from the search: {response.access.reviewedObstaclesAvoided}. Unreviewed reports near the route: {response.access.pendingReportsNearby}.</p></div>}
+              {start && end && <SaveRouteForm key={JSON.stringify([response.fetchedAt,route.id,start.lat,start.lon,end.lat,end.lon])} defaultName={`${start.label.split(',')[0]} to ${end.label.split(',')[0]}`} journey={{kind:'street', start, end, route, fetchedAt:response.fetchedAt, preference,...(response.access?{access:response.access,accessPreferences}:{} )}} />}
+              <LiveGuidance guide={guide} route={route} busy={busy||snapshot} needsAcknowledgment={Boolean(response.access && (response.access.rampSegments || response.access.unknownSegments || route.startSnapDistanceMeters>20 || route.endSnapDistanceMeters>20))} acknowledged={acknowledged} onAcknowledge={setAcknowledged}/>
+              <p className="real-report-link"><Link href={guide.fix?`/report?place=world&lat=${guide.fix.lat}&lon=${guide.fix.lon}`:'/report?place=world'}>Report an obstacle at a real place →</Link></p>
               {response.routes.length > 1 && (
                 <div
                   className="real-alternatives"
@@ -454,7 +494,7 @@ function WalkingPlanner({ liveAvailable, saved }: { liveAvailable: boolean; save
               </details>
               <div className="real-result-source">
                 <span>
-                  Route: FOSSGIS OSRM · data © OpenStreetMap contributors
+                  Route: {response.provider} · data © OpenStreetMap contributors
                 </span>
                 <a
                   href="https://www.openstreetmap.org/fixthemap"

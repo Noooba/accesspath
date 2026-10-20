@@ -9,12 +9,12 @@ export const metadata: Metadata = {
     "Find walking directions from OpenStreetMap data and open endpoints in Google Maps. Accessibility is unverified.",
 };
 
-export default async function RealRoutesPage({ searchParams }: { searchParams: Promise<{ saved?: string }> }) {
-  const { saved } = await searchParams;
+export default async function RealRoutesPage({ searchParams }: { searchParams: Promise<{ saved?: string; access?: string }> }) {
+  const { saved, access } = await searchParams;
   return (
     <>
       <SiteHeader />
-      <RealWorldPlanner liveAvailable={getStorageStatus().available} savedId={typeof saved === 'string' ? saved : undefined} />
+      <RealWorldPlanner liveAvailable={getStorageStatus().available} savedId={typeof saved === 'string' ? saved : undefined} initialAccess={access==='1'} />
       <SiteFooter realWorld />
     </>
   );

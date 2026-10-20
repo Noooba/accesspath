@@ -51,7 +51,7 @@ export function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <Link href="/report" className="header-report">
+        <Link href="/report?place=world" className="header-report">
           Report an obstacle <ArrowUpRight size={15} />
         </Link>
         <Dialog.Root open={menuOpen} onOpenChange={setMenuOpen}>

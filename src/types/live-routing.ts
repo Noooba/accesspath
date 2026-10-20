@@ -22,11 +22,13 @@ export type RealWalkingRoute = {
   warnings: string[];
 };
 export type LiveRouteResponse = {
-  provider: "FOSSGIS OSRM";
+  provider: "FOSSGIS OSRM" | "OpenStreetMap pedestrian graph";
   profile: "walking";
   dataSource: "OpenStreetMap";
   routes: RealWalkingRoute[];
   fetchedAt: string;
+  access?: import('./accessibility').AccessSummary;
+  obstacles?: import('./accessibility').WorldObstacle[];
 };
 export type PlaceSearchResponse = {
   places: RealPlace[];

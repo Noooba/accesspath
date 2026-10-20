@@ -49,6 +49,8 @@ export async function initializeDatabase(database?: Database): Promise<Database>
       const optionalDescription = await readFile(resolve(process.cwd(), 'drizzle/0001_optional_report_description.sql'), 'utf8');
       for (const statement of optionalDescription.split(';').map((part) => part.trim()).filter(Boolean)) await transaction.execute(statement);
     }
+    const worldMigration = await readFile(resolve(process.cwd(), 'drizzle/0002_world_obstacles.sql'), 'utf8');
+    for (const statement of worldMigration.split(';').map(part => part.trim()).filter(Boolean)) await transaction.execute(statement);
     await transaction.commit();
   } catch (error) {
     await transaction.rollback();
