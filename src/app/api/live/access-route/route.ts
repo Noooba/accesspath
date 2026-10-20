@@ -9,6 +9,7 @@ import { providerBase, providerJson } from '@/lib/live-routing/transport';
 import { boundsInput, worldReports } from '@/lib/world-obstacles';
 import { BoundedTtlCache } from '@/lib/live-routing/cache';
 import { accessPreferenceSchema } from '@/lib/access-preferences';
+import { wheelchairProviderRoute } from '@/lib/wheelchair-provider';
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
 const inputSchema=z.object({start:latLon,end:latLon,preferences:accessPreferenceSchema.default(DEFAULT_ACCESS_PREFERENCES)}).strict();
@@ -23,6 +24,7 @@ export async function POST(request:Request) {
     const padding=.004;
     const box={south:Math.max(-90,Math.floor((Math.min(start.lat,end.lat)-padding)*1000)/1000),north:Math.min(90,Math.ceil((Math.max(start.lat,end.lat)+padding)*1000)/1000),west:Math.max(-180,Math.floor((Math.min(start.lon,end.lon)-padding)*1000)/1000),east:Math.min(180,Math.ceil((Math.max(start.lon,end.lon)+padding)*1000)/1000)};
     if(!boundsInput.safeParse(box).success) throw new HttpError(400,'ACCESS_AREA_LIMIT','This area is too large for the local accessibility map.');
+    if(process.env.ORS_API_KEY) return json(await wheelchairProviderRoute(start,end,preferences,await worldReports(box)));
     const key=JSON.stringify(box),cached=networks.get(key);let raw=cached?.raw,fetchedAt=cached?.fetchedAt;
     if(!raw) {
       await acquireProviderSlot('overpass');

@@ -17,7 +17,6 @@ import {
   ShieldQuestion,
   TriangleAlert,
   X,
-  Accessibility,
   LocateFixed,
   Footprints,
   Car,
@@ -32,6 +31,7 @@ import { shortestRouteIndex, type SavedRoute } from '@/lib/saved-routes';
 import { DEFAULT_ACCESS_PREFERENCES, type AccessPreferences } from '@/types/accessibility';
 import { useLiveGuide } from './useLiveGuide';
 import { LiveGuidance } from './LiveGuidance';
+import { AccessPreferencesPanel } from './AccessPreferencesPanel';
 import type {
   LatLon,
   RealPlace,
@@ -62,26 +62,28 @@ export function RealWorldPlanner({
   liveAvailable = true,
   savedId,
   initialAccess=false,
+  wheelchairProvider=false,
 }: {
   liveAvailable?: boolean;
   savedId?: string;
   initialAccess?: boolean;
+  wheelchairProvider?: boolean;
 }) {
   const library = useSavedRoutes();
   const saved = library.routes.find(item => item.id === savedId);
   if (savedId && !library.loaded) return <main id="main-content" className="real-page page-width"><p role="status">Opening saved map…</p></main>;
   if (savedId && (!saved || saved.journey.kind !== 'street')) return <main id="main-content" className="real-page page-width"><h1>Saved map unavailable.</h1><p>{library.error || 'This route is not saved in this browser. It may have been removed or saved on another device.'}</p><Link className="button secondary" href="/saved">Open route library</Link></main>;
-  return <WalkingPlanner key={savedId ?? `new-${initialAccess}`} liveAvailable={liveAvailable} saved={saved} initialAccess={initialAccess} />;
+  return <WalkingPlanner key={savedId ?? `new-${initialAccess}`} liveAvailable={liveAvailable} saved={saved} initialAccess={initialAccess} wheelchairProvider={wheelchairProvider} />;
 }
-function WalkingPlanner({ liveAvailable, saved,initialAccess }: { liveAvailable: boolean; saved?: SavedRoute;initialAccess:boolean }) {
+function WalkingPlanner({ liveAvailable, saved,initialAccess,wheelchairProvider }: { liveAvailable: boolean; saved?: SavedRoute;initialAccess:boolean;wheelchairProvider:boolean }) {
   const initial = saved?.journey.kind === 'street' ? saved.journey : null;
   const [start, setStart] = useState<RealPlace | null>(initial?.start ?? null),
     [end, setEnd] = useState<RealPlace | null>(initial?.end ?? null);
   const [pickTarget, setPickTarget] = useState<"start" | "end" | null>(null);
-  const [response, setResponse] = useState<LiveRouteResponse | null>(initial ? {provider:initial.access?'OpenStreetMap pedestrian graph':'FOSSGIS OSRM',profile:'walking',dataSource:'OpenStreetMap',routes:[initial.route],fetchedAt:initial.fetchedAt,...(initial.access?{access:initial.access}:{})} : null),
+  const [response, setResponse] = useState<LiveRouteResponse | null>(initial ? {provider:initial.access?.engine==='openrouteservice'?'openrouteservice wheelchair':initial.access?'OpenStreetMap pedestrian graph':'FOSSGIS OSRM',profile:'walking',dataSource:'OpenStreetMap',routes:[initial.route],fetchedAt:initial.fetchedAt,...(initial.access?{access:initial.access}:{})} : null),
     [selectedRoute, setSelectedRoute] = useState(0);
   const [preference, setPreference] = useState<'suggested' | 'shortest' | 'accessibility'>(initial?.preference ?? (initialAccess?'accessibility':'suggested'));
-  const [accessPreferences,setAccessPreferences]=useState<AccessPreferences>(initial?.accessPreferences ?? DEFAULT_ACCESS_PREFERENCES);
+  const [accessPreferences,setAccessPreferences]=useState<AccessPreferences>(initial?.accessPreferences ?? (wheelchairProvider?{...DEFAULT_ACCESS_PREFERENCES,maxSlopePercent:6,maxKerbCm:3}:DEFAULT_ACCESS_PREFERENCES));
   const [travelMode,setTravelMode]=useState<TravelMode>('walking');
   const [acknowledged,setAcknowledged]=useState(false),[followPosition,setFollowPosition]=useState(true);
   const [snapshot, setSnapshot] = useState(Boolean(initial));
@@ -157,7 +159,7 @@ function WalkingPlanner({ liveAvailable, saved,initialAccess }: { liveAvailable:
         setSelectedRoute(preference === 'shortest' ? shortestRouteIndex(data.routes) : 0);
         setAcknowledged(false);
         if(originOverride) setStart({...originOverride,id:'current-location',label:'Current location',source:'coordinates'});
-        if(automatic && (data.access?.unknownSegments || data.access?.rampSegments || data.routes.some(route=>route.startSnapDistanceMeters>20 || route.endSnapDistanceMeters>20))) guide.stop();
+        if(automatic && (data.access?.engine==='openrouteservice' || data.access?.unknownSegments || data.access?.rampSegments || data.routes.some(route=>route.startSnapDistanceMeters>20 || route.endSnapDistanceMeters>20))) guide.stop();
       }
     } catch (e) {
       if(generation.current===current&&automatic){setRerouteFailed(true);guide.stop();}
@@ -202,7 +204,7 @@ function WalkingPlanner({ liveAvailable, saved,initialAccess }: { liveAvailable:
         <div>
           <strong>{travelMode!=='walking'?'Driving, cycling and transit directions':isAccess?'Access-aware walking · mapped barriers excluded':'Walking directions · accessibility unverified'}</strong>
           <p>
-            {travelMode!=='walking'?'Choose places below, then open the selected travel mode in Google Maps. Transit schedules and vehicle accessibility are supplied there; availability varies by area. AccessPath’s built-in live guidance is for walking and rolling.':isAccess?'This local beta excludes mapped stairs, restricted paths, unsuitable surfaces, excessive slopes and reviewed obstacles. Missing tags and unmapped endpoint gaps remain unknown. It is not a field-verified wheelchair-accessible guarantee.':'These routes may include stairs or inaccessible sections. Step-free access, slopes, widths and curb ramps have not been verified. The demo’s confirmed step-free rules do not apply here.'}
+            {travelMode!=='walking'?'Choose places below, then open the selected travel mode in Google Maps. Transit schedules and vehicle accessibility are supplied there; availability varies by area. AccessPath’s built-in live guidance is for walking and rolling.':isAccess?wheelchairProvider?'Uses a wheelchair-routing profile with steps and ferries excluded, requested mapped slope/width/kerb limits, and reviewed obstacle areas. Ramp details and missing-data coverage are not fully returned. Check the route before travelling; this is not field-verified accessibility.':'This local beta excludes mapped stairs, restricted paths, unsuitable surfaces, excessive slopes and reviewed obstacles. Missing tags and unmapped endpoint gaps remain unknown. It is not a field-verified wheelchair-accessible guarantee.':'These routes may include stairs or inaccessible sections. Step-free access, slopes, widths and curb ramps have not been verified. The demo’s confirmed step-free rules do not apply here.'}
           </p>
         </div>
       </div>
@@ -267,7 +269,7 @@ function WalkingPlanner({ liveAvailable, saved,initialAccess }: { liveAvailable:
               }} />{label}</label>)}
               <p>Shortest compares the distances of returned walking routes. The provider may offer only one; this is not a guaranteed shortest path.</p>
             </fieldset>}
-            {isAccess&&travelMode==='walking'&&<fieldset className="access-preferences"><legend><Accessibility size={16}/> Plan around your access needs</legend><p>Always excludes mapped stairs and reviewed obstacle areas. Local walks up to 3 km apart; only connected mapped pedestrian paths are used.</p><label className="access-check"><input type="checkbox" checked={accessPreferences.avoidRamps} onChange={e=>changeAccessPreference({avoidRamps:e.target.checked})}/>Avoid mapped ramps</label><label className="access-check"><input type="checkbox" checked={accessPreferences.requireKnownAccess} onChange={e=>changeAccessPreference({requireKnownAccess:e.target.checked})}/>Only paths with mapped access details</label><label>Maximum slope (%)<input type="number" min={0} max={15} step={.5} value={accessPreferences.maxSlopePercent} onChange={e=>changeAccessPreference({maxSlopePercent:Number(e.target.value)})}/></label><label>Minimum clear width (cm)<input type="number" min={60} max={200} step={5} value={accessPreferences.minWidthCm} onChange={e=>changeAccessPreference({minWidthCm:Number(e.target.value)})}/></label><label>Maximum kerb height (cm)<input type="number" min={0} max={5} step={.5} value={accessPreferences.maxKerbCm} onChange={e=>changeAccessPreference({maxKerbCm:Number(e.target.value)})}/></label><p>These are personal planning preferences, not accessibility standards. Gentle ramps are allowed by default and always flagged before guidance starts.</p></fieldset>}
+            {isAccess&&travelMode==='walking'&&<AccessPreferencesPanel preferences={accessPreferences} onChange={changeAccessPreference} wheelchairProvider={wheelchairProvider}/>}
             {travelMode==='walking'&&<button
               className="button primary"
               disabled={!liveAvailable || !start || !end || busy}
@@ -418,7 +420,7 @@ function WalkingPlanner({ liveAvailable, saved,initialAccess }: { liveAvailable:
                   </span>
                   <h2>{metres(route.distanceMeters)}</h2>
                   <p>
-                    {timeEstimate(route.durationSeconds)} · {response.access?'illustrative pace estimate':'provider estimate'},
+                    {timeEstimate(route.durationSeconds)} · {response.access&&response.access.engine!=='openrouteservice'?'illustrative pace estimate':'provider estimate'},
                     not a personal mobility estimate
                   </p>
                 </div>
@@ -427,9 +429,9 @@ function WalkingPlanner({ liveAvailable, saved,initialAccess }: { liveAvailable:
                 </span>
               </div>
               {preference === 'shortest' && <p className="shortest-explanation">{snapshot ? 'This snapshot keeps the selected walk. Recalculate to compare fresh alternatives.' : response.routes.length === 1 ? 'The provider returned one walking route. No shorter alternative was supplied.' : `Shortest of ${response.routes.length} returned walks: ${metres(response.routes[shortestRouteIndex(response.routes)].distanceMeters)}. ${selectedRoute !== shortestRouteIndex(response.routes) ? 'You are viewing a different alternative.' : 'Selected by distance.'}`}</p>}
-              {response.access&&<div className="access-result-summary"><h3>What the map supports</h3><p>{response.access.checkedSegments} pedestrian segments checked · {response.access.excludedSegments} excluded by your preferences or reviewed obstacles.</p><p>{response.access.rampSegments} mapped ramp segments · {response.access.unknownSegments} segments with missing access details.</p><p>Reviewed obstacle areas excluded from the search: {response.access.reviewedObstaclesAvoided}. Unreviewed reports near the route: {response.access.pendingReportsNearby}.</p></div>}
+              {response.access&&<div className="access-result-summary"><h3>What the map supports</h3>{response.access.engine==='openrouteservice'?<p>Wheelchair profile requested with steps excluded and your mapped access limits. The provider does not report complete segment, ramp or missing-data counts, so these are not shown as zero or verified.</p>:<><p>{response.access.checkedSegments} pedestrian segments checked · {response.access.excludedSegments} excluded by your preferences or reviewed obstacles.</p><p>{response.access.rampSegments} mapped ramp segments · {response.access.unknownSegments} segments with missing access details.</p></>}<p>Reviewed obstacle areas excluded from the search: {response.access.reviewedObstaclesAvoided}. Unreviewed reports near the route: {response.access.pendingReportsNearby}.</p></div>}
               {start && end && <SaveRouteForm key={JSON.stringify([response.fetchedAt,route.id,start.lat,start.lon,end.lat,end.lon])} defaultName={`${start.label.split(',')[0]} to ${end.label.split(',')[0]}`} journey={{kind:'street', start, end, route, fetchedAt:response.fetchedAt, preference,...(response.access?{access:response.access,accessPreferences}:{} )}} />}
-              <LiveGuidance guide={guide} route={route} busy={busy||snapshot} needsAcknowledgment={Boolean(response.access && (response.access.rampSegments || response.access.unknownSegments || route.startSnapDistanceMeters>20 || route.endSnapDistanceMeters>20))} acknowledged={acknowledged} onAcknowledge={setAcknowledged}/>
+              <LiveGuidance guide={guide} route={route} busy={busy||snapshot} needsAcknowledgment={Boolean(response.access && (response.access.engine==='openrouteservice' || response.access.rampSegments || response.access.unknownSegments || route.startSnapDistanceMeters>20 || route.endSnapDistanceMeters>20))} acknowledged={acknowledged} onAcknowledge={setAcknowledged}/>
               <p className="real-report-link"><Link href={guide.fix?`/report?place=world&lat=${guide.fix.lat}&lon=${guide.fix.lon}`:'/report?place=world'}>Report an obstacle at a real place →</Link></p>
               {response.routes.length > 1 && (
                 <div

@@ -10,10 +10,11 @@ export type AccessPreferences = {
 export const DEFAULT_ACCESS_PREFERENCES: AccessPreferences = { avoidRamps: false, maxSlopePercent: 8, minWidthCm: 90, maxKerbCm: 2, requireKnownAccess: false };
 export type AccessSummary = {
   source: 'OpenStreetMap';
-  checkedSegments: number;
-  excludedSegments: number;
-  rampSegments: number;
-  unknownSegments: number;
+  engine?: 'local-osm' | 'openrouteservice';
+  checkedSegments: number | null;
+  excludedSegments: number | null;
+  rampSegments: number | null;
+  unknownSegments: number | null;
   reviewedObstaclesAvoided: number;
   pendingReportsNearby: number;
   preferences: AccessPreferences;

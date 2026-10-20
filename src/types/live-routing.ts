@@ -22,7 +22,7 @@ export type RealWalkingRoute = {
   warnings: string[];
 };
 export type LiveRouteResponse = {
-  provider: "FOSSGIS OSRM" | "OpenStreetMap pedestrian graph";
+  provider: "FOSSGIS OSRM" | "OpenStreetMap pedestrian graph" | "openrouteservice wheelchair";
   profile: "walking";
   dataSource: "OpenStreetMap";
   routes: RealWalkingRoute[];

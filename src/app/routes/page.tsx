@@ -14,7 +14,7 @@ export default async function RealRoutesPage({ searchParams }: { searchParams: P
   return (
     <>
       <SiteHeader />
-      <RealWorldPlanner liveAvailable={getStorageStatus().available} savedId={typeof saved === 'string' ? saved : undefined} initialAccess={access==='1'} />
+      <RealWorldPlanner liveAvailable={getStorageStatus().available} savedId={typeof saved === 'string' ? saved : undefined} initialAccess={access==='1'} wheelchairProvider={Boolean(process.env.ORS_API_KEY)} />
       <SiteFooter realWorld />
     </>
   );

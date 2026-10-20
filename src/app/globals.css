@@ -28,7 +28,7 @@
 .access-preferences legend { font-size: 12px; font-weight: 700; color: #24574c; padding: 0 5px; }
 .access-preferences legend svg { display: inline; vertical-align: middle; margin-right: 5px; }
 .access-preferences > label:not(.access-check) { display: grid; gap: 5px; font-size: 12px; margin: 10px 0; }
-.access-preferences input[type=number] { width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid #afc4bd; border-radius: 6px; background: #fff; color: var(--ink); }
+.access-preferences input[type=number], .access-preferences select { width: 100%; min-height: 44px; padding: 8px 12px; border: 1px solid #afc4bd; border-radius: 6px; background: #fff; color: var(--ink); }
 .access-preferences > p { font-size: 11px; line-height: 1.8; margin: 7px 0; }
 .access-check { display: flex; align-items: flex-start; gap: 10px; min-height: 44px; padding: 10px 0; font-size: 12px; line-height: 1.75; cursor: pointer; }
 .access-check input { accent-color: var(--teal); flex: none; width: 18px; height: 18px; margin-top: 2px; }
