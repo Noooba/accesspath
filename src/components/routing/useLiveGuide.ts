@@ -57,7 +57,7 @@ export function useLiveGuide(route: RealWalkingRoute | null, reroute: (point: La
       if(progress.remainingMeters<15 && distanceMetres(point,{lat:destination[0],lon:destination[1]})<=Math.max(12,point.accuracy)) {stop();setArrived(true);return;}
       const instruction=activeRoute.steps[progress.stepIndex]?.instruction;
       const speechKey=`${activeRoute.id}:${activeRoute.distanceMeters}:${progress.stepIndex}`;
-      if(config.voice && instruction && spoken.current!==speechKey && typeof SpeechSynthesisUtterance!=='undefined') {
+      if(config.voice && instruction && progress.distanceFromRoute<=Math.max(35,point.accuracy*2) && spoken.current!==speechKey && typeof SpeechSynthesisUtterance!=='undefined') {
         window.speechSynthesis.cancel();window.speechSynthesis.speak(new SpeechSynthesisUtterance(instruction));spoken.current=speechKey;
       }
       if(progress.distanceFromRoute>Math.max(35,point.accuracy*2)) offRouteCount.current++;else offRouteCount.current=0;

@@ -75,8 +75,8 @@
 .access-model-copy { align-self: center; }
 .access-model-copy h2 { margin: 18px 0; font-size: clamp(30px,3vw,44px); }
 .access-model-copy p { font-size: 14px; max-width: 460px; }
-.access-model-stage { height: 235px; perspective: 800px; display: flex; align-items: center; justify-content: center; }
-.access-model-world { position: relative; width: 250px; height: 155px; transform-style: preserve-3d; transform: rotateX(55deg) rotateZ(calc(-28deg + var(--model-tilt,0deg))); transition: transform 180ms ease; }
+.access-model-stage { height: 235px; perspective: 800px; display: flex; align-items: center; justify-content: center; overflow:hidden; border-radius:10px; }
+.access-model-world { position: relative; width: 250px; height: 155px; transform-style: preserve-3d; transform: translateY(35px) rotateX(55deg) rotateZ(calc(-28deg + var(--model-tilt,0deg))); transition: transform 180ms ease; }
 .model-ground { position: absolute; inset: -12px; background: #d7e4de; border: 1px solid #c3d5cc; box-shadow: 10px 16px 0 #c1d3c9; }
 .model-path { position: absolute; width: 240px; height: 72px; left: 5px; top: 40px; background: #fbfcf5; transform: translateZ(1px); border: 1px solid #e2e5d9; }
 .model-ramp { position: absolute; left: 48px; top: 40px; width: 160px; height: 72px; background: #87b39c; transform-origin: left center; transform: rotateY(-22deg); border: 1px solid #54816c; box-shadow: 0 8px 0 #5b8b75; }
@@ -97,7 +97,7 @@
 .access-model.compact { margin: 35px 0; padding: 25px; gap: 25px; }
 .access-model.compact h2 { font-size: 28px; }.access-model.compact .access-model-stage { height: 185px; }
 @media(max-width:800px) { .world-report-grid { grid-template-columns: 1fr; }.access-model { grid-template-columns: 1fr; padding: 24px; gap: 10px; }.access-model.compact { grid-template-columns:1fr; }.access-model-copy h2 { font-size: 31px; }.travel-modes label { flex: 1 1 calc(50% - 8px); }.live-guidance { padding: 20px; }.guidance-options { display: block; } }
-@media(prefers-reduced-motion:reduce) { .access-model-world { transition:none; transform:rotateX(55deg) rotateZ(-28deg); } }
+@media(prefers-reduced-motion:reduce) { .access-model-world { transition:none; transform:translateY(35px) rotateX(55deg) rotateZ(-28deg); } }
 * {
   box-sizing: border-box;
 }

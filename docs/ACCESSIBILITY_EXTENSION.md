@@ -2,13 +2,19 @@
 
 This extension preserves the existing synthetic campus, saved-route library and report moderation. It adds access-aware street planning, opt-in foreground GPS guidance, real-place obstacle reports, and explicit external travel-mode handoffs. This document records design and implementation scope; executed verification is recorded after the final build.
 
+## Current release gate
+
+Local lint, TypeScript and production build passed. All 150 unit/integration tests passed, and the full 48-browser-test regression passed; location tests use deliberately simulated browser coordinates, not a real-device field trial. The 21st local review reported zero errors and zero warnings, with informational color-token suggestions. Production-dependency audit reported zero advisories.
+
+The feature branch is deployed as a preview while access-map connectivity is being resolved. Public Overpass services timed out both locally and from Vercel. The app displayed a service error rather than replacing the result with an unchecked walk. A one-off raw public OSM map retrieval succeeded for software investigation; the editing API is not used as the recurring application data backend. Real-place report lookup from the hosted preview was checked separately. A free HeiGIT/openrouteservice account sign-in has been requested as the next provider-connection step; no key, ORS integration or successful live wheelchair route is claimed yet. Ordinary walking/GPS, external travel modes, reports, saved routes and illustrations remain independently implemented and tested.
+
 ## Access-aware street routes
 
 `/api/live/access-route` downloads a bounded OpenStreetMap pedestrian graph through Overpass and runs length-weighted Dijkstra after exclusions. Mapped stairs remain excluded even when a stair way has a ramp tag: a separately mapped usable connection is needed. Restricted access, wheelchair restrictions, rough surfaces, unsuitable recorded widths, kerbs and slopes, unsupported barriers and reviewed active obstacle areas are excluded. Vehicle-road centrelines and invented sidewalk connections are not used. Ramps are allowed by default, as selected by the user, and flagged before guidance starts; an explicit switch excludes them.
 
 Missing slope, width, surface, wheelchair and crossing-kerb information remains unknown. Strict mode requires these mapped details and endpoint snaps within 5 m. Ordinary access-aware mode allows unknown details only with visible warnings and review before guidance. No field survey, universal suitability, accessibility certification or compliance score is inferred from tags. Endpoint snap gaps are always disclosed. Local-beta bounds: endpoints at most 3 km apart, non-polar and non-date-line area; no unchecked ordinary walk substitutes for a failed access request.
 
-Overpass data is temporarily cached for ten minutes with bounded memory. Shared database request gates enforce at least 15 seconds between Overpass requests, and the existing 1.1-second gate remains for Photon/FOSSGIS. Community public services are suitable only for limited prototype use, can refuse requests and offer no availability guarantee. A maintained dedicated routing/data service is necessary for significant production demand.
+Overpass data is temporarily cached for ten minutes with bounded memory; cached responses preserve their original download time. The default endpoint is the documented Private.coffee Overpass service, using POST requests and a project-identifying User-Agent. Shared database gates enforce at least 15 seconds between requests, and the existing 1.1-second gate remains for Photon/FOSSGIS. Community services can refuse requests and offer no availability guarantee. A maintained dedicated routing/data service and field review are necessary before critical navigation reliance or substantial production demand.
 
 ## Foreground GPS
 
@@ -33,6 +39,7 @@ The homepage and methodology contain small interactive CSS 3D ramp/stair/kerb il
 - [OSM incline tagging](https://wiki.openstreetmap.org/wiki/Key:incline)
 - [OSM kerb tagging](https://wiki.openstreetmap.org/wiki/Key:kerb)
 - [Overpass shared-service limits](https://dev.overpass-api.de/overpass-doc/en/preface/commons.html)
+- [Private.coffee endpoint, terms and privacy](https://overpass.private.coffee/)
 - [Geolocation watchPosition](https://developer.mozilla.org/en-US/docs/Web/API/Geolocation/watchPosition)
 - [Google Maps mode-specific URLs](https://developers.google.com/maps/documentation/urls/get-started)
 - [FOSSGIS routing limits and logging](https://routing.openstreetmap.de/about.html)
