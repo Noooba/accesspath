@@ -15,16 +15,14 @@ export function wheelchairRequest(start:LatLon,end:LatLon,preferences:AccessPref
     const angle=2*Math.PI*index/12,radius=report.radiusMeters+3,lat=report.lat+Math.sin(angle)*radius/111195,lon=report.lon+Math.cos(angle)*radius/(111195*Math.max(.05,Math.cos(report.lat*Math.PI/180)));
     return [lon,lat];
   })]);
-  return {coordinates:[[start.lon,start.lat],[end.lon,end.lat]],radiuses:[60,60],instructions:true,units:'m',language:'en',options:{avoid_features:['steps','ferries'],profile_params:{restrictions:{maximum_incline:preferences.maxSlopePercent,minimum_width:preferences.minWidthCm/100,maximum_sloped_kerb:preferences.maxKerbCm/100,surface_type:'paving_stones',smoothness_type:'good',track_type:'grade1'}},...(polygons.length?{avoid_polygons:{type:'MultiPolygon',coordinates:polygons}}:{})}};
+  return {coordinates:[[start.lon,start.lat],[end.lon,end.lat]],radiuses:[60,60],instructions:true,extra_info:[],units:'m',language:'en',options:{avoid_features:['steps','ferries'],profile_params:{restrictions:{maximum_incline:preferences.maxSlopePercent,minimum_width:preferences.minWidthCm/100,maximum_sloped_kerb:preferences.maxKerbCm/100,surface_type:'paving_stones',smoothness_type:'good',track_type:'grade1'}},...(polygons.length?{avoid_polygons:{type:'MultiPolygon',coordinates:polygons}}:{})}};
 }
 export function parseWheelchairResponse(raw:unknown,start:LatLon,end:LatLon,preferences:AccessPreferences,reports:WorldObstacle[]):LiveRouteResponse {
   const parsed=featureSchema.safeParse(raw);
   if(!parsed.success) throw new HttpError(502,'WHEELCHAIR_RESPONSE_INVALID','The wheelchair provider returned incomplete route data. No unchecked replacement route is shown.');
   const feature=parsed.data.features[0],coordinates:[number,number][]=feature.geometry.coordinates.map(([lon,lat])=>[lat,lon]);
-  if(feature.properties.warnings?.length) {
-    const messages=feature.properties.warnings.map(warning=>warning&&typeof warning==='object'&&'message'in warning&&typeof warning.message==='string'?warning.message.replace(/[\u0000-\u001f]/g,' ').slice(0,300):'Unspecified provider warning').join(' ');
-    throw new HttpError(422,'WHEELCHAIR_PROVIDER_LIMITATION',`The wheelchair provider reported limitations: ${messages} No route is accepted until those limitations are reviewed.`);
-  }
+  const providerWarnings=(feature.properties.warnings??[]).map(warning=>warning&&typeof warning==='object'&&'message'in warning&&typeof warning.message==='string'?warning.message.replace(/[\u0000-\u001f]/g,' ').slice(0,300):'Unspecified provider warning');
+  if(providerWarnings.some(message=>!/^Extra info requested but not available: [a-z_ ,]+$/i.test(message))) throw new HttpError(422,'WHEELCHAIR_PROVIDER_LIMITATION',`The wheelchair provider reported limitations: ${providerWarnings.join(' ')} No route is accepted until those limitations are reviewed.`);
   const approved=reports.filter(report=>report.reviewStatus==='approved'&&Date.parse(report.expiresAt)>Date.now());
   for(const report of approved) for(let index=1;index<coordinates.length;index++) if(segmentProjection(report,{lat:coordinates[index-1][0],lon:coordinates[index-1][1]},{lat:coordinates[index][0],lon:coordinates[index][1]}).distance<=report.radiusMeters) throw new HttpError(422,'REVIEWED_OBSTACLE_ON_ROUTE','The provider route still crosses a reviewed obstacle area. No route is accepted; choose different endpoints.');
   const snappedStart={lat:coordinates[0][0],lon:coordinates[0][1]},snappedEnd={lat:coordinates.at(-1)![0],lon:coordinates.at(-1)![1]},startGap=distanceMetres(start,snappedStart),endGap=distanceMetres(end,snappedEnd);
@@ -36,7 +34,7 @@ export function parseWheelchairResponse(raw:unknown,start:LatLon,end:LatLon,pref
   });
   if(!steps.length) throw new HttpError(502,'WHEELCHAIR_RESPONSE_INVALID','The provider returned no usable directions.');
   const warnings=['Wheelchair routing profile requested with steps and ferries excluded and your mapped slope, width, kerb and surface restrictions. This is not a field-verified accessibility guarantee.','The provider does not return complete per-segment ramp, width or missing-data coverage. Ramps may be included; confirm their slope and condition before starting.','Unmapped or outdated barriers can remain. An absent map tag must not be read as verified access.'];
-  if(feature.properties.warnings?.length) warnings.push('The routing provider returned additional limitations. Review the route and confirm conditions before travelling.');
+  warnings.push(...providerWarnings.map(message=>`Provider data limitation: ${message}. Missing optional information is not a verified access finding.`));
   if(startGap>5||endGap>5) warnings.push(`Unrouted endpoint gaps: ${Math.round(startGap)} m at start and ${Math.round(endGap)} m at destination. These have not been checked for barriers.`);
   const pending=reports.filter(report=>report.reviewStatus==='pending').filter(report=>coordinates.slice(1).some((point,index)=>segmentProjection(report,{lat:coordinates[index][0],lon:coordinates[index][1]},{lat:point[0],lon:point[1]}).distance<=report.radiusMeters+20)).length;
   if(pending) warnings.push(`${pending} unreviewed reports are near this route. They remain unverified.`);

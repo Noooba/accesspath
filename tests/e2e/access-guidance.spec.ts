@@ -34,6 +34,12 @@ test('a missing access connection never becomes an ordinary unchecked walking re
   await page.goto('/routes?access=1');await places(page);await page.getByRole('button',{name:'Find access-aware walk',exact:true}).click();
   await expect(page.locator('.real-route-error')).toContainText('No connected pedestrian route');await expect(page.locator('.real-result')).toHaveCount(0);
 });
+test('wheelchair-provider results keep missing coverage unknown and require review',async({page})=>{
+  await installLiveFixtures(page,base());
+  await page.route('**/api/live/access-route',route=>route.fulfill({json:{...accessResponse(),provider:'openrouteservice wheelchair',access:{...accessResponse().access,engine:'openrouteservice',checkedSegments:null,excludedSegments:null,rampSegments:null,unknownSegments:null}}}));
+  await page.goto('/routes?access=1');await places(page);await page.getByRole('button',{name:'Find access-aware walk',exact:true}).click();
+  await expect(page.locator('.access-result-summary')).toContainText('does not report complete');await expect(page.locator('.access-result-summary')).not.toContainText('0 mapped ramp');await expect(page.getByRole('button',{name:'Start live guidance',exact:true})).toBeDisabled();await page.getByRole('checkbox',{name:/I have reviewed/}).check();await expect(page.getByRole('button',{name:'Start live guidance',exact:true})).toBeEnabled();
+});
 test('uses simulated browser GPS, advances live guidance, reroutes only after repeated deviation and stops tracking',async({page,context})=>{
   const fixture=await installLiveFixtures(page,base());await context.grantPermissions(['geolocation'],{origin:new URL(base()).origin});await context.setGeolocation({latitude:START_FIXTURE.lat,longitude:START_FIXTURE.lon,accuracy:5});
   await page.goto('/routes');expect((await page.request.get('/routes')).headers()['permissions-policy']).toContain('geolocation=(self)');

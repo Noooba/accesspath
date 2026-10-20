@@ -325,6 +325,7 @@ function WalkingPlanner({ liveAvailable, saved,initialAccess,wheelchairProvider 
                 Routing service policy <ArrowUpRight size={12} />
               </a>
               <a href="https://overpass.private.coffee/#terms" target="_blank" rel="noopener noreferrer">Access-map service &amp; privacy <ArrowUpRight size={12}/></a>
+              <a href="https://heigit.org/privacy-policy/" target="_blank" rel="noopener noreferrer">Wheelchair-routing service &amp; privacy <ArrowUpRight size={12}/></a>
             </p>
           </details>
         </section>

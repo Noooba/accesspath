@@ -24,7 +24,11 @@
       "src/components/community/EvidenceDashboard.tsx",
       "src/components/routing/RealWorldPlanner.tsx",
       "src/components/routing/PlacePicker.tsx",
-      "src/components/map/RealWorldMap.tsx"
+      "src/components/map/RealWorldMap.tsx",
+      "src/components/routing/LiveGuidance.tsx",
+      "src/components/routing/AccessPreferencesPanel.tsx",
+      "src/components/reports/WorldReportForm.tsx",
+      "src/components/ui/AccessModel.tsx"
     ],
     "assets": [
       "public/fonts/manrope.ttf",
@@ -137,7 +141,8 @@
     "2026-10-17: Reconciled source design context, scope of Motion usage, and accessible-target review; final browser QA remains the evidence for visual behavior.",
     "2026-10-17: Local 21st review completed: zero errors/warnings; 306 informational hardcoded-color suggestions. Added 44px map controls, AA contrast fixes, keyboard skip focus, Radix navigation, a nonmodal mobile/tablet planning sheet, and restrained result transitions. Browser verification is recorded separately in docs/TEST_REPORT.md.",
     "2026-10-17: Final software verification passed81 Vitest tests,22 browser tests, lint, TypeScript, production build and local migrate/seed; affected mobile capture check also passed after screenshot refinement.",
-    "2026-10-18: Added separate real-world walking planner using existing typography/teal tokens, OSM street tiles, Photon manual place search and actual foot-profile OSRM routing. Keep ordinary walking results explicitly unverified; Google Maps handoff is an external URL, not an embedded Google route. No new UI framework/dependency."
+    "2026-10-18: Added separate real-world walking planner using existing typography/teal tokens, OSM street tiles, Photon manual place search and actual foot-profile OSRM routing. Keep ordinary walking results explicitly unverified; Google Maps handoff is an external URL, not an embedded Google route. No new UI framework/dependency.",
+    "2026-10-19: User requested optional foreground GPS, access-aware walking, real-place obstacle reports and small educational 3D models. Preserve the civic teal/ink system; use original CSS 3D ramp/stair/kerb illustrations with keyboard controls and reduced-motion support. Public Overpass outages led to an authenticated server-only wheelchair-provider adapter; never imply complete access coverage or native background GPS."
   ],
   "evidence": [
     {

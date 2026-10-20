@@ -57,7 +57,7 @@ export default function PrivacyPage() {
             receives your network request and the map area being viewed.
             Pressing Search sends the entered place name or address through this
             server to Photon. Calculating a walking route sends the two selected
-            coordinates to FOSSGIS’s routing server. These providers can log
+            coordinates to FOSSGIS’s routing server. Wheelchair planning sends the endpoints and reviewed obstacle-avoidance areas to HeiGIT/openrouteservice; its key stays server-side. These providers can log
             requests under their own policies.
           </p>
           <p>
@@ -101,6 +101,7 @@ export default function PrivacyPage() {
             </a>
           </p>
         </section>
+        <p><a href="https://heigit.org/privacy-policy/" target="_blank" rel="noopener noreferrer">HeiGIT wheelchair-routing privacy policy</a></p>
         <section aria-labelledby="privacy-saved">
           <h2 id="privacy-saved">Your saved maps and routes.</h2>
           <p>Saving a route stores its name, tags, favorite status and endpoints in this browser’s local storage. Street routes also keep a dated copy of their line and written directions; campus routes keep the chosen scenario and filters. These saved journeys are not uploaded to the reports database or synced across devices.</p>

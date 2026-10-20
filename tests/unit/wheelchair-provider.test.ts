@@ -34,6 +34,9 @@ describe('server-only wheelchair provider contract',()=>{
   it('refuses warning-bearing provider results rather than assuming constraints were honored',()=>{
     const raw=fixture();raw.features[0].properties.warnings=[{code:1,message:'Fixture: restrictions could not be applied'}];expect(()=>parseWheelchairResponse(raw,START_FIXTURE,END_FIXTURE,providerPreferences,[])).toThrow(/limitations/);
   });
+  it('preserves a known optional extra-info warning as missing data, without claiming full access coverage',()=>{
+    const raw=fixture();raw.features[0].properties.warnings=[{code:2,message:'Extra info requested but not available: roadaccessrestrictions'}];const parsed=parseWheelchairResponse(raw,START_FIXTURE,END_FIXTURE,providerPreferences,[]);expect(parsed.routes[0].warnings.join(' ')).toContain('roadaccessrestrictions');expect(parsed.access?.unknownSegments).toBeNull();
+  });
   it('sends reviewed obstacle polygons and independently rejects a returned crossing',()=>{
     const point=walkingFixture().routes[0].coordinates[1];
     const report:WorldObstacle={id:'world-test',kind:'world',lat:point[0],lon:point[1],category:'blocked-path',radiusMeters:10,description:'Synthetic fixture',reportedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+86400000).toISOString(),reviewStatus:'approved',reviewedAt:null,moderatorNotes:''};

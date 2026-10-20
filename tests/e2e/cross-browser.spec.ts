@@ -16,7 +16,9 @@ test('Firefox renders the real graph and changes between mode and uncertainty st
 test('Firefox supports mobile reflow and the protected moderator entry', async ({ page, request }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
-  await page.getByRole('link', { name: 'Explore routes', exact: false }).click();
+  await page.getByRole('link', { name: 'Plan a real-world walk', exact: false }).click();
+  await expect(page.getByRole('heading', { name: 'Find a real-world walking route.', exact: true })).toBeVisible();
+  await page.goto('/explore');
   await expect(routePanel(page).locator('.result-distance')).toHaveText('193m');
   await expectNoHorizontalOverflow(page);
   await page.goto('/admin');
