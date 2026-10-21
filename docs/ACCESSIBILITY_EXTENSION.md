@@ -1,12 +1,18 @@
 # Mobility planning and foreground guidance — October 19, 2026
 
-This extension preserves the existing synthetic campus, saved-route library and report moderation. It adds access-aware street planning, opt-in foreground GPS guidance, real-place obstacle reports, and explicit external travel-mode handoffs. This document records design and implementation scope; executed verification is recorded after the final build.
+This extension preserves the existing synthetic campus, saved-route library and report moderation. It adds access-aware street planning, opt-in foreground GPS guidance, real-place obstacle reports, and explicit external travel-mode handoffs. Executed verification and its limits are recorded below.
 
-## Current release gate
+## Verified mobility checkpoint
 
-Local lint, TypeScript and production build passed. All 150 unit/integration tests passed, and the full 48-browser-test regression passed; location tests use deliberately simulated browser coordinates, not a real-device field trial. The 21st local review reported zero errors and zero warnings, with informational color-token suggestions. Production-dependency audit reported zero advisories.
+Local lint, TypeScript and production build passed. All 159 unit/integration tests passed, and the complete 49-browser-test regression passed (47 Chromium, 2 Firefox); location tests use deliberately simulated browser coordinates, not a real-device field trial. The 21st local review reported zero errors and zero warnings, with 408 informational color-token suggestions. Production-dependency audit reported zero advisories.
 
-The feature branch is deployed as a preview while access-map connectivity is being resolved. Public Overpass services timed out both locally and from Vercel. The app displayed a service error rather than replacing the result with an unchecked walk. A one-off raw public OSM map retrieval succeeded for software investigation; the editing API is not used as the recurring application data backend. Real-place report lookup from the hosted preview was checked separately. A free HeiGIT/openrouteservice account sign-in has been requested as the next provider-connection step; no key, ORS integration or successful live wheelchair route is claimed yet. Ordinary walking/GPS, external travel modes, reports, saved routes and illustrations remain independently implemented and tested.
+Public Overpass services timed out locally and from Vercel; the app displayed an error rather than substituting an unchecked walk. The user completed free HeiGIT signup and explicitly authorized storing the key as a non-revealable server-only Vercel secret for Preview and Production. No key was stored in Git, chat, the ZIP or a local environment file.
+
+The authenticated wheelchair integration was exercised in the hosted preview. Between public Torrance City Hall/library map points (33.836867,-118.340942 to 33.837678,-118.343068), it returned an actual 440 m route with 11 directions. The request uses the wheelchair profile, excludes steps/ferries, applies supported mapped restrictions and passes reviewed avoidance polygons. Returned geometry is independently checked against reviewed obstacle areas. The provider's missing optional road-access detail warning is preserved as unknown; warnings that may concern unapplied constraints are rejected. This is a functional provider check, not a field survey or validation of an individual's mobility needs. Hosted real-place report lookup also succeeded without posting a fabricated obstruction.
+
+The same request passed against the public production API on October 19: HTTP 200, openrouteservice wheelchair, 440.1 m and 11 directions. Unavailable ramp counts remained null. Production deployment dpl_76r1yhGGTUbykLvpembVUMer2u42 reached READY from source commit d7e90ccfb9399bf66bd1e1bb7850d5e74601bee6. Local evidence: output/hosted-wheelchair-route.json and output/playwright/hosted-wheelchair-route.png. These contain public test points, not a private GPS trace or API key.
+
+The connected provider supports selected slope values (3/6/10/15 percent), kerb limits (3/6/10 cm) and minimum width. Unsupported saved limits are not silently relaxed. Complete per-segment ramp/attribute counts are not returned and remain null, not zero. Strict complete-data/no-ramp controls are disabled with an explanation for this provider; ramps remain allowed with explicit review before guidance. The optional local OSM graph implementation remains available when an operator supplies a working Overpass service.
 
 ## Access-aware street routes
 

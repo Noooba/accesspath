@@ -1,5 +1,13 @@
 # AccessPath verification record
 
+## October 19 mobility, GPS and real-place reporting extension
+
+Lint, TypeScript and production build passed. All **159 Vitest tests** passed across 11 files. The full browser regression passed **49/49** (47 Chromium + 2 Firefox, 53.6 seconds). New checks cover real graph exclusion of stairs/ramps, slopes/widths/kerbs, reviewed obstacles versus pending reports, strict unknown-data failure, GPS permission and movement, repeated-deviation rerouting/cooldown, stale/low-accuracy rejection, Stop behavior, real-place public consent and persisted receipts, external travel modes, and missing provider counts kept null. Provider-contract tests check explicit step avoidance, supported limits, independent obstacle intersection rejection, bounded bodies and key-free browser responses.
+
+Desktop/tablet/mobile screenshots were inspected, with keyboard, reduced-motion and automated axe checks in exercised states. Spatial illustrations are original CSS 3D with text/button alternatives, not surveyed paths. 21st review: zero errors/warnings, 408 informational suggestions; catalog search remained unauthenticated, so no hosted component generation is claimed. Production-only dependency audit: zero advisories. These checks do not establish complete WCAG conformance or field suitability.
+
+An actual hosted wheelchair-profile request from public Torrance City Hall/library path points returned **440 m and 11 directions**. This verifies the data connection and response rendering, not real-world obstacle absence. A known optional-extra-info-unavailable advisory remains visible as missing data; other provider limitations fail closed. GPS was simulated in an isolated test browser; no private device location was collected during this verification. Public Overpass timeouts motivated the authenticated server-only HeiGIT integration. The user explicitly authorized Preview/Production secret storage. Details: ACCESSIBILITY_EXTENSION.md.
+
 ## October 18 saved routes and shortest-walk extension
 
 Lint, TypeScript and production build passed. All **113 Vitest tests** passed (7 files, 2.69 seconds). The frozen production build passed **41 browser tests** (39 Chromium + 2 Firefox, 42.9 seconds).
@@ -10,7 +18,7 @@ The library was screenshot-inspected at 1440, 768 and 375 pixels. No horizontal 
 
 Saved entries remain in the browser profile, with explicit no-sync/no-offline-tiles notices. Street snapshots retain their original fetch date and warning text. Campus entries recalculate against the current graph. Shortest street mode compares only the returned alternatives, not the provider's complete network. No packages, credentials, database schema or provider request quota were changed.
 
-**Latest software checkpoint: October 18, 2026 (America/Los_Angeles).** Development began October 16. These results come from executed checks against this project, not from configuration or source inspection alone.
+**Earlier software checkpoint: October 18, 2026 (America/Los_Angeles).** Development began October 16. The following historical results come from executed checks against this project, not from configuration or source inspection alone. The October 19 mobility checkpoint above supersedes these test totals.
 
 
 ## October 18 real-world routing extension

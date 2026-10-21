@@ -18,7 +18,7 @@ This independent prototype ships with **AccessPath Demo Campus**. All campus geo
 - Coverage and evidence views derived from application data, with demonstration labels.
 - A browser-local **Saved routes** library for street-map snapshots and campus settings, with names, favorites, tags, search, editing and removal. Save a calculated route, then open `/saved`. This does not sync across devices or provide offline street tiles.
 - **Shortest available walk** selects the least-distance street route among the alternatives actually supplied by the provider. The campus **Shortest walk** mode calculates graph distance. Street results are not claimed to be globally shortest or verified step-free.
-- **Wheelchair / mobility access** calculates a separate local OSM pedestrian path after excluding mapped stairs, restrictions, unsuitable surfaces, excessive slopes/kerbs, narrow paths and reviewed active obstacle areas. Gentle ramps are allowed with warnings; strict mapped-detail and avoid-ramp switches are available. Current access-aware range: endpoints up to 3 km apart. Unknowns and unrouted endpoint gaps remain explicit.
+- **Wheelchair / mobility access** uses an authenticated wheelchair profile with steps/ferries excluded, supported mapped slope/width/kerb restrictions, and reviewed obstacle-avoidance areas. Returned paths are also checked against those areas. Ramps may be included and must be reviewed. Complete attribute/ramp coverage is not inferred; unsupported complete-data/no-ramp controls are disabled with an explanation. The optional local OSM graph engine supports finer checks when a working Overpass service is supplied. Current access-aware range: endpoints up to 3 km apart.
 - Opt-in **foreground GPS guidance** with a moving map, next-step display, optional voice, accuracy feedback and separately enabled, throttled off-route recalculation. No movement history is stored. Phone lock/background behavior and real-device accuracy are not guaranteed.
 - **Real-place obstacle reports** with selected public coordinates, explicit consent, pending review and seven-day active-avoidance expiry. Existing campus reports remain separate. Driving, cycling and bus/transit controls open genuine Google Maps mode-specific directions and schedules.
 - Small interactive CSS 3D ramp/stair/kerb illustrations explain access considerations without WebGL or fabricated real-world conditions. See [implementation and limits](docs/ACCESSIBILITY_EXTENSION.md).
@@ -64,7 +64,7 @@ The type-check script runs `next typegen` first, so Next’s generated route dec
 
 [Actual public-place walking-route screenshot](output/playwright/live-public-route-desktop.png) · [Provider integration and verification](docs/LIVE_ROUTING.md)
 
-Latest mobility-extension verification: **150 local tests and 48 browser tests passed**. The new feature preview still needs a working access-map provider connection before live wheelchair-route success can be claimed; see [current extension status](docs/ACCESSIBILITY_EXTENSION.md).
+Latest mobility-extension verification: **159 local tests and 49 browser tests passed**. The hosted wheelchair provider returned a real 440 m / 11-direction route between the public test points. GPS movement tests use simulated positions; no field accessibility or real-device accuracy claim is made. See [extension verification and limits](docs/ACCESSIBILITY_EXTENSION.md).
 
 ## Checks
 
